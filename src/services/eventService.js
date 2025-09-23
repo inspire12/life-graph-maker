@@ -187,7 +187,7 @@ class EventService {
     if (validated.category !== undefined) {
       validated.category = String(validated.category).trim();
       if (validated.category.length === 0) {
-        validated.category = '기타';
+        validated.category = '성취';
       }
     }
 

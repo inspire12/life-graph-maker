@@ -163,8 +163,9 @@ export class LocalStorageService extends StorageService {
         order: eventData.order || data.graphs[graphIndex].events.length + 1,
         emotionScore: eventData.emotionScore || 0,
         importanceRate: eventData.importanceRate || 3,
-        category: eventData.category || '기타',
-        color: eventData.color || '#4CAF50'
+        category: eventData.category || '성취',
+        color: eventData.color || '#4CAF50',
+        image: eventData.image || null
       };
 
       data.graphs[graphIndex].events.push(newEvent);

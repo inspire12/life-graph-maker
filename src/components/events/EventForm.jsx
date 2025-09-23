@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
-import { FiSave, FiTrash2 } from 'react-icons/fi';
+import { FiSave, FiTrash2, FiImage, FiX } from 'react-icons/fi';
 import StarRating from '../common/StarRating';
+import DatePicker from '../common/DatePicker';
+import { fileToBase64, validateImageFile, resizeImage } from '../../utils/imageHelpers';
+import { getEmotionColor, getEmotionColorDescription } from '../../utils/colorHelpers';
 
 function EventForm({ 
   event = null, 
+  prefilledData = null,
   onSave, 
   onDelete, 
   onCancel,
@@ -16,23 +20,22 @@ function EventForm({
     endDate: '',
     emotionScore: 0,
     importanceRate: 3,
-    category: '',
-    color: '#4CAF50'
+    category: '성취',
+    image: null
   });
 
   const [customCategory, setCustomCategory] = useState('');
   const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
 
   // 기본 카테고리 목록
   const defaultCategories = [
-    '교육', '커리어', '인간관계', '건강', '취미', '여행', '가족', '성취', '도전', '기타'
+    '성취', '교육', '커리어', '인간관계', '건강', '취미', '여행', '가족', '도전', '기타'
   ];
 
-  // 기본 색상 팔레트
-  const colorPalette = [
-    '#4CAF50', '#2196F3', '#FF9800', '#F44336', '#9C27B0',
-    '#607D8B', '#795548', '#E91E63', '#00BCD4', '#CDDC39'
-  ];
+  // 감정 점수에 따른 동적 색상 계산
+  const emotionColor = getEmotionColor(formData.emotionScore);
+  const colorDescription = getEmotionColorDescription(formData.emotionScore);
 
   useEffect(() => {
     if (event && mode === 'edit') {
@@ -44,7 +47,7 @@ function EventForm({
         emotionScore: event.emotionScore || 0,
         importanceRate: event.importanceRate || 3,
         category: event.category || '',
-        color: event.color || '#4CAF50'
+        image: event.image || null
       });
 
       // 커스텀 카테고리인지 확인
@@ -52,8 +55,14 @@ function EventForm({
         setIsCustomCategory(true);
         setCustomCategory(event.category);
       }
+    } else if (prefilledData && mode === 'create') {
+      // 그래프 클릭으로 전달된 데이터로 초기화
+      setFormData(prev => ({
+        ...prev,
+        ...prefilledData
+      }));
     }
-  }, [event, mode]);
+  }, [event, prefilledData, mode]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -104,10 +113,39 @@ function EventForm({
     }));
   };
 
-  const handleColorChange = (color) => {
+  // handleColorChange 함수는 제거됨 - 색상이 감정 점수에 따라 자동 결정됨
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // 파일 유효성 검사
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      alert(validation.error);
+      return;
+    }
+
+    setImageLoading(true);
+    try {
+      // 이미지 리사이징 및 base64 변환
+      const resizedImage = await resizeImage(file, 800, 600, 0.8);
+      setFormData(prev => ({
+        ...prev,
+        image: resizedImage
+      }));
+    } catch (error) {
+      console.error('Image upload error:', error);
+      alert('이미지 업로드에 실패했습니다.');
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
+  const handleImageRemove = () => {
     setFormData(prev => ({
       ...prev,
-      color
+      image: null
     }));
   };
 
@@ -124,6 +162,11 @@ function EventForm({
       return;
     }
 
+    if (!formData.date.trim()) {
+      alert('시작 날짜를 선택해주세요.');
+      return;
+    }
+
     // 날짜 유효성 검사
     if (formData.date && formData.endDate) {
       const startDate = new Date(formData.date);
@@ -136,11 +179,12 @@ function EventForm({
 
     const eventData = {
       ...formData,
-      date: formData.date || null,
+      date: formData.date, // 필수 필드이므로 null 체크 제거
       endDate: formData.endDate || null,
       title: formData.title.trim(),
       description: formData.description.trim(),
-      category: formData.category.trim()
+      category: formData.category.trim(),
+      color: getEmotionColor(formData.emotionScore) // 감정 점수 기반 색상 자동 생성
     };
 
     onSave(eventData);
@@ -183,13 +227,35 @@ function EventForm({
 
       <div className="form-row">
         <div className="form-group">
-          <label htmlFor="date">시작 날짜 (선택사항)</label>
+          <DatePicker
+            value={formData.date}
+            onChange={(date) => setFormData(prev => ({ ...prev, date }))}
+            label="시작 날짜"
+            required={true}
+            placeholder="시작 날짜를 선택하세요"
+          />
+        </div>
+
+        <div className="form-group">
+          <DatePicker
+            value={formData.endDate}
+            onChange={(date) => setFormData(prev => ({ ...prev, endDate: date }))}
+            label="종료 날짜 (선택사항)"
+            placeholder="종료 날짜를 선택하세요"
+          />
+        </div>
+      </div>
+
+      <div className="form-row" style={{ display: 'none' }}>
+        <div className="form-group">
+          <label htmlFor="date">시작 날짜 *</label>
           <input
             type="date"
             id="date"
             name="date"
             value={formData.date}
             onChange={handleInputChange}
+            required
           />
         </div>
 
@@ -233,14 +299,14 @@ function EventForm({
             <span>매우 좋음 (+10)</span>
           </div>
         </div>
-      </div>
 
-      <div className="form-group">
-        <label>중요도</label>
-        <StarRating
-          value={formData.importanceRate}
-          onChange={handleImportanceChange}
-        />
+        <div className="form-group">
+          <label>중요도</label>
+          <StarRating
+            value={formData.importanceRate}
+            onChange={handleImportanceChange}
+          />
+        </div>
       </div>
 
       <div className="form-group">
@@ -270,18 +336,60 @@ function EventForm({
       </div>
 
       <div className="form-group">
-        <label>색상</label>
-        <div className="color-palette">
-          {colorPalette.map(color => (
-            <button
-              key={color}
-              type="button"
-              className={`color-option ${formData.color === color ? 'selected' : ''}`}
-              style={{ backgroundColor: color }}
-              onClick={() => handleColorChange(color)}
-              aria-label={`색상 ${color}`}
-            />
-          ))}
+        <label>색상 미리보기</label>
+        <div className="emotion-color-preview">
+          <div 
+            className="color-preview-box"
+            style={{ backgroundColor: emotionColor }}
+          ></div>
+          <div className="color-info">
+            <div className="color-description">{colorDescription}</div>
+            <div className="color-code">색상 코드: {emotionColor}</div>
+            <div className="color-note">
+              💡 색상은 감정 점수에 따라 자동으로 결정됩니다
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label>사진 (선택사항)</label>
+        <div className="image-upload-section">
+          {formData.image ? (
+            <div className="image-preview">
+              <img 
+                src={formData.image} 
+                alt="이벤트 사진" 
+                className="preview-image"
+              />
+              <button
+                type="button"
+                onClick={handleImageRemove}
+                className="image-remove-btn"
+                aria-label="사진 삭제"
+              >
+                <FiX />
+              </button>
+            </div>
+          ) : (
+            <div className="image-upload-area">
+              <input
+                type="file"
+                id="image-upload"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="image-upload-input"
+                disabled={imageLoading}
+              />
+              <label htmlFor="image-upload" className="image-upload-label">
+                <FiImage />
+                <span>
+                  {imageLoading ? '업로드 중...' : '사진 추가'}
+                </span>
+                <small>JPG, PNG, GIF, WebP (최대 5MB)</small>
+              </label>
+            </div>
+          )}
         </div>
       </div>
 

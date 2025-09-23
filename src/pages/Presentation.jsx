@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiX, FiChevronLeft, FiChevronRight, FiPlay, FiPause } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
 import { graphService } from '../services/graphService';
 import { eventService } from '../services/eventService';
+import PresentationGraph from '../components/presentation/PresentationGraph';
 
 function Presentation() {
   const { id } = useParams();
@@ -13,6 +15,7 @@ function Presentation() {
   const [loading, setLoading] = useState(true);
   const [isAutoPlay, setIsAutoPlay] = useState(false);
   const [minImportance, setMinImportance] = useState(3);
+  const [autoPlayInterval, setAutoPlayInterval] = useState(5000); // 5초
 
   useEffect(() => {
     loadGraph();
@@ -24,17 +27,34 @@ function Presentation() {
     }
   }, [graph, minImportance]);
 
+  // 자동 진행 효과
   useEffect(() => {
-    let interval;
+    let interval = null;
+    
     if (isAutoPlay && events.length > 0) {
       interval = setInterval(() => {
-        setCurrentEventIndex(prev => 
-          prev < events.length - 1 ? prev + 1 : 0
-        );
-      }, 5000); // 5초마다 자동 진행
+        setCurrentEventIndex(prev => {
+          const nextIndex = prev < events.length - 1 ? prev + 1 : 0;
+          console.log('Auto advancing from', prev, 'to', nextIndex);
+          return nextIndex;
+        });
+      }, autoPlayInterval);
     }
-    return () => clearInterval(interval);
-  }, [isAutoPlay, events.length]);
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isAutoPlay, events.length, autoPlayInterval]);
+
+  // 자동 진행 중 특정 클릭으로만 정지하도록 변경
+  const handleStopAutoPlay = (e) => {
+    // 네비게이션 버튼 클릭 시에만 자동 진행 정지
+    if (e.target.closest('.navigation-controls') || e.target.closest('.btn-control')) {
+      setIsAutoPlay(false);
+    }
+  };
 
   const loadGraph = async () => {
     try {
@@ -65,12 +85,14 @@ function Presentation() {
   };
 
   const handlePrevious = () => {
+    setIsAutoPlay(false); // 수동 조작 시 자동 진행 정지
     setCurrentEventIndex(prev => 
       prev > 0 ? prev - 1 : events.length - 1
     );
   };
 
   const handleNext = () => {
+    setIsAutoPlay(false); // 수동 조작 시 자동 진행 정지
     setCurrentEventIndex(prev => 
       prev < events.length - 1 ? prev + 1 : 0
     );
@@ -90,6 +112,7 @@ function Presentation() {
         handleExit();
         break;
       case 'ArrowLeft':
+        e.preventDefault();
         handlePrevious();
         break;
       case 'ArrowRight':
@@ -99,7 +122,11 @@ function Presentation() {
         break;
       case 'p':
       case 'P':
+        e.preventDefault();
         toggleAutoPlay();
+        break;
+      default:
+        // 다른 키 입력 시에는 자동 진행을 정지하지 않음
         break;
     }
   };
@@ -134,7 +161,17 @@ function Presentation() {
       <header className="presentation-header">
         <div className="presentation-title">
           <h1>{graph.title}</h1>
-          <span>이벤트 {currentEventIndex + 1} / {events.length}</span>
+          <div className="presentation-progress">
+            <span>이벤트 {currentEventIndex + 1} / {events.length}</span>
+            <div className="progress-bar">
+              <motion.div 
+                className="progress-fill"
+                initial={{ width: 0 }}
+                animate={{ width: `${((currentEventIndex + 1) / events.length) * 100}%` }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+              />
+            </div>
+          </div>
         </div>
         <button onClick={handleExit} className="btn btn-close">
           <FiX /> ESC로 나가기
@@ -143,63 +180,130 @@ function Presentation() {
 
       <main className="presentation-main">
         <div className="graph-section">
-          <div className="graph-placeholder">
-            <h3>그래프 시각화</h3>
-            <p>현재 이벤트: {currentEvent.title}</p>
-            <p>감정 점수: {currentEvent.emotionScore}</p>
-            {/* TODO: PresentationGraph 컴포넌트 구현 */}
-          </div>
+          <PresentationGraph
+            events={events}
+            currentEventIndex={currentEventIndex}
+            viewMode="timeline"
+            height={350}
+          />
         </div>
 
         <div className="story-section">
-          <div className="event-story">
-            <div className="event-date">
-              {currentEvent.date 
-                ? (
-                  <>
-                    {new Date(currentEvent.date).toLocaleDateString('ko-KR', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                    {currentEvent.endDate && (
-                      <>
-                        {' ~ '}
-                        {new Date(currentEvent.endDate).toLocaleDateString('ko-KR', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </>
-                    )}
-                  </>
-                )
-                : `${currentEvent.order}번째 이벤트`
-              }
-            </div>
-            
-            <h2>{currentEvent.title}</h2>
-            
-            <div className="event-content">
-              <p>{currentEvent.description}</p>
-            </div>
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={currentEventIndex}
+              className="event-story"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ 
+                duration: 0.5, 
+                ease: "easeInOut" 
+              }}
+            >
+              <motion.div 
+                className="event-date"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                {currentEvent.date 
+                  ? (
+                    <>
+                      {new Date(currentEvent.date).toLocaleDateString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                      {currentEvent.endDate && (
+                        <>
+                          {' ~ '}
+                          {new Date(currentEvent.endDate).toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </>
+                      )}
+                    </>
+                  )
+                  : `${currentEvent.order}번째 이벤트`
+                }
+              </motion.div>
+              
+              <motion.h2
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {currentEvent.title}
+              </motion.h2>
+              
+              {currentEvent.image && (
+                <motion.div 
+                  className="event-image-presentation"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3, duration: 0.6 }}
+                >
+                  <img 
+                    src={currentEvent.image} 
+                    alt={currentEvent.title}
+                    className="presentation-event-image"
+                  />
+                </motion.div>
+              )}
 
-            <div className="event-details">
-              <div className="emotion-score">
-                <strong>감정 점수:</strong> {currentEvent.emotionScore > 0 ? '+' : ''}{currentEvent.emotionScore}/10
-              </div>
-              <div className="importance-rate">
-                <strong>중요도:</strong> {'★'.repeat(currentEvent.importanceRate)}
-              </div>
-              <div className="category">
-                <strong>카테고리:</strong> {currentEvent.category}
-              </div>
-            </div>
-          </div>
+              <motion.div 
+                className="event-content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              >
+                <p>{currentEvent.description}</p>
+              </motion.div>
+
+              <motion.div 
+                className="event-details"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <motion.div 
+                  className="emotion-score"
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.6, type: "spring" }}
+                >
+                  <strong>감정 점수:</strong> 
+                  <span className={`emotion-value ${currentEvent.emotionScore >= 0 ? 'positive' : 'negative'}`}>
+                    {currentEvent.emotionScore > 0 ? '+' : ''}{currentEvent.emotionScore}/10
+                  </span>
+                </motion.div>
+                <motion.div 
+                  className="importance-rate"
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.7, type: "spring" }}
+                >
+                  <strong>중요도:</strong> 
+                  <span className="stars">{'★'.repeat(currentEvent.importanceRate)}</span>
+                </motion.div>
+                <motion.div 
+                  className="category"
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.8, type: "spring" }}
+                >
+                  <strong>카테고리:</strong> {currentEvent.category}
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
 
-      <footer className="presentation-controls">
+      <footer className="presentation-controls" onClick={handleStopAutoPlay}>
         <div className="importance-filter">
           <label>중요도 필터:</label>
           <select 
@@ -214,14 +318,33 @@ function Presentation() {
           </select>
         </div>
 
+        <div className="auto-play-controls">
+          <label>자동 진행 속도:</label>
+          <select 
+            value={autoPlayInterval} 
+            onChange={(e) => setAutoPlayInterval(Number(e.target.value))}
+            disabled={isAutoPlay}
+          >
+            <option value={2000}>빠름 (2초)</option>
+            <option value={3000}>보통 (3초)</option>
+            <option value={5000}>느림 (5초)</option>
+            <option value={8000}>매우 느림 (8초)</option>
+          </select>
+        </div>
+
         <div className="navigation-controls">
           <button onClick={handlePrevious} className="btn btn-control">
             <FiChevronLeft /> 이전
           </button>
           
-          <button onClick={toggleAutoPlay} className="btn btn-control">
+          <button onClick={toggleAutoPlay} className="btn btn-control auto-play-btn">
             {isAutoPlay ? <FiPause /> : <FiPlay />}
             {isAutoPlay ? '정지' : '자동'}
+            {isAutoPlay && (
+              <div className="auto-play-indicator">
+                <div className="pulse-dot"></div>
+              </div>
+            )}
           </button>
           
           <button onClick={handleNext} className="btn btn-control">
@@ -231,6 +354,7 @@ function Presentation() {
 
         <div className="keyboard-hints">
           ← 이전 | 스페이스/→ 다음 | P 자동진행 | ESC 나가기
+          {isAutoPlay && <span className="auto-status"> | 🔄 자동 진행 중</span>}
         </div>
       </footer>
     </div>

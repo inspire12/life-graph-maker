@@ -6,6 +6,7 @@ import { eventService } from '../services/eventService';
 import Header from '../components/common/Header';
 import Modal from '../components/common/Modal';
 import EventForm from '../components/events/EventForm';
+import LifeGraph from '../components/graph/LifeGraph';
 
 function GraphEdit() {
   const { id } = useParams();
@@ -15,6 +16,7 @@ function GraphEdit() {
   const [viewMode, setViewMode] = useState('timeline'); // 'timeline' or 'sequence'
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
+  const [prefilledData, setPrefilledData] = useState(null);
 
   useEffect(() => {
     loadGraph();
@@ -44,11 +46,32 @@ function GraphEdit() {
 
   const handleAddEvent = () => {
     setEditingEvent(null);
+    setPrefilledData(null);
     setIsEventModalOpen(true);
   };
 
   const handleEditEvent = (event) => {
     setEditingEvent(event);
+    setPrefilledData(null);
+    setIsEventModalOpen(true);
+  };
+
+  const handleGraphClick = (clickData) => {
+    // 클릭 위치를 기반으로 이벤트 추가 모달 열기
+    const prefilledEventData = {
+      emotionScore: clickData.emotionScore
+    };
+
+    // 타임라인 모드일 때는 클릭한 위치를 날짜로 변환
+    if (clickData.viewMode === 'timeline' && clickData.timestamp) {
+      const clickedDate = new Date(clickData.timestamp);
+      if (!isNaN(clickedDate.getTime())) {
+        prefilledEventData.date = clickedDate.toISOString().split('T')[0];
+      }
+    }
+
+    setEditingEvent(null);
+    setPrefilledData(prefilledEventData);
     setIsEventModalOpen(true);
   };
 
@@ -88,6 +111,7 @@ function GraphEdit() {
   const handleCloseModal = () => {
     setIsEventModalOpen(false);
     setEditingEvent(null);
+    setPrefilledData(null);
   };
 
   const handlePresentationMode = () => {
@@ -150,43 +174,70 @@ function GraphEdit() {
               이벤트순
             </button>
           </div>
-          <button onClick={handleAddEvent} className="btn btn-primary">
-            <FiPlus /> 이벤트 추가
-          </button>
         </div>
 
         <div className="graph-container">
-          <div className="graph-placeholder">
-            <h3>그래프 영역</h3>
-            <p>모드: {viewMode === 'timeline' ? '시간순' : '이벤트순'}</p>
-            <p>이벤트 수: {graph.events?.length || 0}개</p>
-            {/* TODO: LifeGraph 컴포넌트 구현 */}
-          </div>
+          <LifeGraph
+            events={graph.events || []}
+            viewMode={viewMode}
+            onEventClick={handleEditEvent}
+            onGraphClick={handleGraphClick}
+            height={500}
+          />
         </div>
 
         <div className="events-panel">
-          <h3>이벤트 목록</h3>
+          <div className="events-panel-header">
+            <h3>이벤트 목록 ({graph.events?.length || 0}개)</h3>
+            <button onClick={handleAddEvent} className="btn btn-primary">
+              <FiPlus /> 이벤트 추가
+            </button>
+          </div>
+          
           {graph.events && graph.events.length > 0 ? (
-            <div className="events-list">
+            <div className="events-grid">
               {graph.events.map(event => (
                 <div 
                   key={event.id} 
-                  className="event-card clickable"
+                  className="event-grid-card"
                   onClick={() => handleEditEvent(event)}
+                  style={{ borderLeft: `4px solid ${event.color}` }}
                 >
-                  <div className="event-header">
-                    <h4>{event.title}</h4>
+                  <div className="event-card-header">
+                    <div className="event-title-section">
+                      <h4>{event.title}</h4>
+                      <div className="event-category">{event.category}</div>
+                    </div>
                     <div className="event-rating">
                       {'★'.repeat(event.importanceRate || 3)}
                     </div>
                   </div>
-                  <p>{event.description}</p>
-                  <div className="event-meta">
-                    <span>감정: {event.emotionScore > 0 ? '+' : ''}{event.emotionScore}</span>
-                    <span>카테고리: {event.category}</span>
+                  
+                  {event.image && (
+                    <div className="event-image">
+                      <img 
+                        src={event.image} 
+                        alt={event.title}
+                        className="event-card-image"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="event-emotion-score" data-score={event.emotionScore}>
+                    <span className="emotion-label">감정점수</span>
+                    <span className="emotion-value">
+                      {event.emotionScore > 0 ? '+' : ''}{event.emotionScore}
+                    </span>
+                  </div>
+                  
+                  {event.description && (
+                    <p className="event-description">{event.description}</p>
+                  )}
+                  
+                  <div className="event-date-info">
                     {event.date && (
-                      <span>
-                        {new Date(event.date).toLocaleDateString()}
+                      <span className="event-date">
+                        📅 {new Date(event.date).toLocaleDateString()}
                         {event.endDate && (
                           <> ~ {new Date(event.endDate).toLocaleDateString()}</>
                         )}
@@ -198,10 +249,13 @@ function GraphEdit() {
             </div>
           ) : (
             <div className="empty-events">
-              <p>아직 이벤트가 없습니다.</p>
-              <button onClick={handleAddEvent} className="btn btn-primary">
-                <FiPlus /> 첫 번째 이벤트 추가
-              </button>
+              <div className="empty-content">
+                <h4>아직 이벤트가 없습니다</h4>
+                <p>첫 번째 인생 이벤트를 추가해보세요!</p>
+                <button onClick={handleAddEvent} className="btn btn-primary btn-large">
+                  <FiPlus /> 첫 번째 이벤트 추가
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -215,6 +269,7 @@ function GraphEdit() {
       >
         <EventForm
           event={editingEvent}
+          prefilledData={prefilledData}
           mode={editingEvent ? 'edit' : 'create'}
           onSave={handleSaveEvent}
           onDelete={editingEvent ? handleDeleteEvent : null}
