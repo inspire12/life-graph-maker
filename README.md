@@ -1,12 +1,201 @@
-# React + Vite
+# 🌟 라이프 그래프 메이커 (Life Graph Maker)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+사용자가 인생의 중요한 이벤트들을 시각적 그래프로 기록하고 관리할 수 있는 웹 애플리케이션입니다.
 
-Currently, two official plugins are available:
+## 📋 주요 기능
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 🎯 그래프 관리
+- **여러 그래프 생성**: 테마별, 기간별로 다양한 라이프 그래프 생성
+- **그래프 편집**: 제목, 설명, 색상 테마 등 그래프 속성 관리
+- **그래프 삭제**: 불필요한 그래프 정리
 
-## Expanding the ESLint configuration
+### 📊 이벤트 관리
+- **이벤트 추가**: 그래프 클릭으로 직관적인 이벤트 추가
+- **상세 정보 입력**:
+  - 제목 및 상세 설명
+  - 시작/종료 날짜
+  - 감정 점수 (-10 ~ +10)
+  - 중요도 평가 (1~5 별점)
+  - 카테고리 분류
+  - 이미지 첨부
+- **이벤트 편집/삭제**: 기존 이벤트 수정 및 삭제
+- **컨텍스트 메뉴**: 우클릭으로 빠른 작업 수행
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 📈 시각화 기능
+- **듀얼 보기 모드**:
+  - 타임라인 모드: 실제 날짜 기반 그래프
+  - 시퀀스 모드: 이벤트 순서 기반 그래프
+- **감정 점수 시각화**: 색상과 높이로 감정 상태 표현
+- **중요도 표시**: 점 크기로 이벤트 중요도 시각화
+- **전체화면/줌 기능**: 상세한 그래프 분석을 위한 확대 기능
+
+### 🎭 프리젠테이션 모드
+- **자동 재생**: 이벤트를 시간 순서대로 자동 진행
+- **인터랙티브 애니메이션**: 그래프와 이벤트 카드의 동기화된 애니메이션
+- **수동 제어**: 이전/다음 이벤트로 자유로운 탐색
+- **진행률 표시**: 현재 진행 상황 시각화
+
+### 📱 사용자 친화적 인터페이스
+- **직관적인 날짜 입력**: 키보드 입력 및 달력 선택 지원
+- **빠른 날짜 선택**: 오늘, 어제, 1주일 전 등 빠른 선택
+- **이미지 업로드**: 드래그 & 드롭 또는 클릭으로 이미지 첨부
+- **반응형 디자인**: 다양한 화면 크기에 최적화
+
+## 🛠 기술 스택
+
+### Frontend Framework
+- **React 19.1.1**: 최신 React 기능 활용
+- **Vite**: 빠른 개발 서버 및 빌드 도구
+
+### 주요 라이브러리
+- **React Router DOM**: SPA 라우팅 관리
+- **Recharts**: 그래프 시각화 및 차트 렌더링
+- **Framer Motion**: 부드러운 애니메이션 효과
+- **React Icons**: 일관된 아이콘 시스템
+- **date-fns**: 날짜 처리 및 포맷팅
+- **UUID**: 고유 식별자 생성
+
+### 아키텍처
+- **컴포넌트 기반 설계**: 재사용 가능한 UI 컴포넌트
+- **서비스 레이어**: 비즈니스 로직 분리
+- **스토리지 추상화**: localStorage 기반 (DB 확장 가능)
+
+## 🚀 설치 및 실행
+
+### 필요 조건
+- Node.js 18.0.0 이상
+- npm 또는 yarn
+
+### 설치
+```bash
+# 저장소 클론
+git clone [repository-url]
+cd life-graph-maker
+
+# 의존성 설치
+npm install
+```
+
+### 개발 서버 실행
+```bash
+# 개발 서버 시작 (localhost:5173)
+npm run dev
+
+# 네트워크에서 접근 가능한 개발 서버
+npm run dev -- --host
+```
+
+### 빌드 및 배포
+```bash
+# 프로덕션 빌드
+npm run build
+
+# 빌드된 애플리케이션 미리보기
+npm run preview
+
+# 코드 린팅
+npm run lint
+```
+
+## 📁 프로젝트 구조
+
+```
+src/
+├── components/           # 재사용 가능한 UI 컴포넌트
+│   ├── common/          # 공통 컴포넌트
+│   │   ├── DatePicker.jsx    # 날짜 선택 컴포넌트
+│   │   ├── Modal.jsx         # 모달 컴포넌트
+│   │   └── ContextMenu.jsx   # 컨텍스트 메뉴
+│   ├── events/          # 이벤트 관련 컴포넌트
+│   │   └── EventForm.jsx     # 이벤트 입력 폼
+│   ├── graph/           # 그래프 컴포넌트
+│   │   └── LifeGraph.jsx     # 메인 그래프 컴포넌트
+│   └── presentation/    # 프리젠테이션 모드
+│       └── PresentationGraph.jsx
+├── pages/               # 페이지 컴포넌트
+│   ├── GraphList.jsx         # 그래프 목록 페이지
+│   ├── GraphEdit.jsx         # 그래프 편집 페이지
+│   └── Presentation.jsx      # 프리젠테이션 페이지
+├── services/            # 비즈니스 로직
+│   ├── graphService.js       # 그래프 관리 서비스
+│   ├── eventService.js       # 이벤트 관리 서비스
+│   └── storage/             # 스토리지 추상화
+│       ├── index.js         # 스토리지 인터페이스
+│       └── localStorage.js   # localStorage 구현체
+└── utils/               # 유틸리티 함수
+    ├── graphHelpers.js       # 그래프 데이터 처리
+    ├── colorHelpers.js       # 색상 관련 유틸리티
+    └── imageHelpers.js       # 이미지 처리 유틸리티
+```
+
+## 📖 사용법
+
+### 1. 첫 번째 그래프 만들기
+1. 메인 페이지에서 "새 그래프 만들기" 버튼 클릭
+2. 그래프 제목과 설명 입력
+3. "생성하기" 버튼으로 그래프 생성
+
+### 2. 이벤트 추가하기
+1. 그래프 편집 페이지에서 그래프 영역 클릭
+2. 이벤트 정보 입력:
+   - 제목과 설명
+   - 날짜 (키보드 입력 또는 달력 선택)
+   - 감정 점수 (-10 ~ +10)
+   - 중요도 (1-5 별점)
+   - 카테고리 선택
+   - 이미지 첨부 (선택사항)
+
+### 3. 그래프 보기 모드 전환
+- **타임라인 모드**: 실제 날짜 기반으로 이벤트 배치
+- **시퀀스 모드**: 이벤트 발생 순서대로 배치
+
+### 4. 프리젠테이션 모드
+1. 그래프 편집 페이지에서 "프레젠테이션" 버튼 클릭
+2. 자동 재생으로 이벤트 순차 탐색
+3. 키보드 화살표나 버튼으로 수동 제어
+
+### 5. 전체화면으로 그래프 보기
+- 그래프 오른쪽 상단의 확대 버튼 클릭
+- ESC 키로 전체화면 종료
+
+## 💾 데이터 저장
+
+현재 버전은 브라우저의 localStorage를 사용하여 데이터를 저장합니다.
+- **장점**: 별도 서버 없이 로컬에서 완전히 동작
+- **한계**: 브라우저 데이터 삭제 시 정보 손실
+- **확장성**: 스토리지 추상화로 향후 데이터베이스 연동 가능
+
+## 🎨 커스터마이징
+
+### 색상 테마
+- 감정 점수에 따른 자동 색상 설정
+- 긍정적 이벤트: 파란색 계열
+- 중립적 이벤트: 회색 계열  
+- 부정적 이벤트: 빨간색 계열
+
+### 카테고리 확장
+`src/components/events/EventForm.jsx`에서 카테고리 목록을 수정하여 새로운 카테고리 추가 가능
+
+## 🔄 향후 계획
+
+- **데이터베이스 연동**: 클라우드 데이터 저장
+- **다중 사용자 지원**: 계정 시스템 및 공유 기능
+- **고급 분석**: 감정 패턴 분석 및 인사이트
+- **모바일 앱**: React Native 기반 모바일 버전
+- **데이터 내보내기**: PDF, CSV 등 다양한 형식 지원
+
+## 🤝 기여하기
+
+1. 저장소 포크
+2. 기능 브랜치 생성 (`git checkout -b feature/새기능`)
+3. 변경사항 커밋 (`git commit -m '새 기능 추가'`)
+4. 브랜치에 푸시 (`git push origin feature/새기능`)
+5. Pull Request 생성
+
+## 📄 라이선스
+
+MIT License
+
+## 📞 문의
+
+프로젝트에 대한 문의나 개선 제안이 있으시면 이슈를 등록해 주세요.

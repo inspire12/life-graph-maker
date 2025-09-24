@@ -14,6 +14,7 @@ function EventForm({
   mode = 'create' // 'create' or 'edit'
 }) {
   const [formData, setFormData] = useState({
+    id: null, // 수정 시 이벤트 ID 보존
     title: '',
     description: '',
     date: '',
@@ -27,6 +28,7 @@ function EventForm({
   const [customCategory, setCustomCategory] = useState('');
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // 중복 저장 방지
 
   // 기본 카테고리 목록
   const defaultCategories = [
@@ -37,13 +39,34 @@ function EventForm({
   const emotionColor = getEmotionColor(formData.emotionScore);
   const colorDescription = getEmotionColorDescription(formData.emotionScore);
 
+  // 안전한 날짜 변환 함수
+  const safeDateConvert = (dateValue) => {
+    if (!dateValue) return '';
+    
+    // 이미 YYYY-MM-DD 형식인 경우 그대로 반환
+    if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+      return dateValue;
+    }
+    
+    // Date 객체나 다른 형식인 경우 변환
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().split('T')[0];
+    } catch (e) {
+      console.warn('Date conversion failed:', dateValue);
+      return '';
+    }
+  };
+
   useEffect(() => {
     if (event && mode === 'edit') {
       setFormData({
+        id: event.id, // 이벤트 ID 보존
         title: event.title || '',
         description: event.description || '',
-        date: event.date ? new Date(event.date).toISOString().split('T')[0] : '',
-        endDate: event.endDate ? new Date(event.endDate).toISOString().split('T')[0] : '',
+        date: safeDateConvert(event.date),
+        endDate: safeDateConvert(event.endDate),
         emotionScore: event.emotionScore || 0,
         importanceRate: event.importanceRate || 3,
         category: event.category || '',
@@ -149,8 +172,11 @@ function EventForm({
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // 중복 저장 방지
+    if (isSaving) return;
     
     if (!formData.title.trim()) {
       alert('이벤트 제목을 입력해주세요.');
@@ -177,17 +203,26 @@ function EventForm({
       }
     }
 
-    const eventData = {
-      ...formData,
-      date: formData.date, // 필수 필드이므로 null 체크 제거
-      endDate: formData.endDate || null,
-      title: formData.title.trim(),
-      description: formData.description.trim(),
-      category: formData.category.trim(),
-      color: getEmotionColor(formData.emotionScore) // 감정 점수 기반 색상 자동 생성
-    };
+    setIsSaving(true);
 
-    onSave(eventData);
+    try {
+      const eventData = {
+        ...formData,
+        date: formData.date, // 필수 필드이므로 null 체크 제거
+        endDate: formData.endDate || null,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        category: formData.category.trim(),
+        color: getEmotionColor(formData.emotionScore) // 감정 점수 기반 색상 자동 생성
+      };
+
+      await onSave(eventData);
+    } catch (error) {
+      console.error('Failed to save event:', error);
+      alert('이벤트 저장에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDelete = () => {
@@ -275,7 +310,7 @@ function EventForm({
         </div>
       </div>
 
-      <div className="form-row">
+      <div className="form-row category-row">
         <div className="form-group">
           <label htmlFor="emotionScore">감정 점수</label>
           <div className="emotion-score-input">
@@ -414,8 +449,9 @@ function EventForm({
           <button 
             type="submit" 
             className="btn btn-primary"
+            disabled={isSaving}
           >
-            <FiSave /> {mode === 'create' ? '추가' : '저장'}
+            <FiSave /> {isSaving ? '저장 중...' : (mode === 'create' ? '추가' : '저장')}
           </button>
         </div>
       </div>

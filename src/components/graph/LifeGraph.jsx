@@ -12,7 +12,8 @@ import {
   Cell
 } from 'recharts';
 import { motion } from 'framer-motion';
-import { FiMaximize, FiMinimize } from 'react-icons/fi';
+import { FiMaximize, FiMinimize, FiX } from 'react-icons/fi';
+import ContextMenu from '../common/ContextMenu';
 import { 
   prepareGraphData, 
   calculateXAxisDomain, 
@@ -27,9 +28,16 @@ function LifeGraph({
   viewMode = 'timeline', 
   onEventClick,
   onGraphClick,
+  onEventDelete,
   height = 400 
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showClickHint, setShowClickHint] = useState(true);
+  const [contextMenu, setContextMenu] = useState({
+    isOpen: false,
+    position: { x: 0, y: 0 },
+    targetEvent: null
+  });
 
   // 그래프 데이터 준비
   const rawData = prepareGraphData(events, viewMode);
@@ -47,7 +55,16 @@ function LifeGraph({
     const data = payload[0].payload;
     
     return (
-      <div className="graph-tooltip">
+      <div 
+        className="graph-tooltip clickable-tooltip"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onEventClick && data.originalEvent) {
+            onEventClick(data.originalEvent);
+          }
+        }}
+        style={{ cursor: onEventClick ? 'pointer' : 'default' }}
+      >
         <div className="tooltip-header">
           <h4>{data.title}</h4>
           <div className="tooltip-rating">
@@ -62,19 +79,32 @@ function LifeGraph({
             <p><strong>설명:</strong> {data.description}</p>
           )}
         </div>
+        {onEventClick && (
+          <div className="tooltip-footer">
+            <small>클릭하여 수정</small>
+          </div>
+        )}
       </div>
     );
   };
 
   // 커스텀 점 렌더링
-  const CustomDot = ({ cx, cy, payload }) => {
+  const CustomDot = ({ cx, cy, payload, index }) => {
     if (!payload) return null;
 
     const scale = isFullscreen ? 1.5 : 1;
     const size = (4 + payload.importanceRate * 2) * scale; // 중요도에 따른 크기
     
+    const handleDotClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (onEventClick && payload.originalEvent) {
+        onEventClick(payload.originalEvent);
+      }
+    };
+    
     return (
-      <g>
+      <g onClick={handleDotClick} style={{ cursor: onEventClick ? 'pointer' : 'default' }}>
         <circle
           cx={cx}
           cy={cy}
@@ -82,8 +112,6 @@ function LifeGraph({
           fill={payload.color}
           stroke="#fff"
           strokeWidth={2 * scale}
-          style={{ cursor: 'pointer' }}
-          onClick={() => onEventClick && onEventClick(payload.originalEvent)}
         />
         {payload.importanceRate >= 4 && (
           <circle
@@ -155,6 +183,53 @@ function LifeGraph({
       order: viewMode === 'sequence' ? clickedX : null,
       emotionScore: clickedY
     });
+  };
+
+  // 우클릭 처리 함수
+  const handleContextMenu = (event, targetEvent = null) => {
+    event.preventDefault();
+    setContextMenu({
+      isOpen: true,
+      position: { x: event.clientX, y: event.clientY },
+      targetEvent
+    });
+  };
+
+  // 컨텍스트 메뉴 닫기
+  const closeContextMenu = () => {
+    setContextMenu({
+      isOpen: false,
+      position: { x: 0, y: 0 },
+      targetEvent: null
+    });
+  };
+
+  // 컨텍스트 메뉴 액션들
+  const handleContextAddEvent = (position) => {
+    // 우클릭 위치 기반으로 이벤트 추가
+    if (onGraphClick) {
+      onGraphClick({
+        x: position.x,
+        y: position.y,
+        viewMode,
+        emotionScore: 0
+      });
+    }
+  };
+
+  const handleContextDuplicateEvent = (event) => {
+    if (onGraphClick) {
+      const duplicatedEvent = {
+        ...event,
+        title: `${event.title} (복사본)`,
+        date: new Date().toISOString().split('T')[0]
+      };
+      // 복사된 이벤트로 새 이벤트 추가 모달 열기
+      onGraphClick({
+        prefilledData: duplicatedEvent,
+        emotionScore: event.emotionScore
+      });
+    }
   };
 
   // X축 틱 포맷터
@@ -255,7 +330,16 @@ function LifeGraph({
               r: isFullscreen ? 12 : 8, 
               stroke: '#2196F3', 
               strokeWidth: isFullscreen ? 3 : 2, 
-              fill: '#fff' 
+              fill: '#fff'
+            }}
+            onClick={(data, index, event) => {
+              if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+              }
+              if (onEventClick && data && data.originalEvent) {
+                onEventClick(data.originalEvent);
+              }
             }}
             connectNulls={false}
           />
@@ -287,20 +371,43 @@ function LifeGraph({
       )}
 
       {/* 그래프 클릭 안내 */}
-      {!isFullscreen && onGraphClick && (
+      {!isFullscreen && onGraphClick && showClickHint && (
         <div style={{
           position: 'absolute',
           top: 50,
           left: 20,
           background: 'rgba(33, 150, 243, 0.1)',
           color: '#1976D2',
-          padding: '6px 12px',
+          padding: '8px 12px',
           borderRadius: '12px',
           fontSize: '12px',
           border: '1px solid rgba(33, 150, 243, 0.3)',
-          backdropFilter: 'blur(4px)'
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          minWidth: '200px',
+          justifyContent: 'space-between'
         }}>
-          💡 그래프를 클릭하여 이벤트 추가
+          <span>💡 그래프를 클릭하여 이벤트 추가</span>
+          <button
+            onClick={() => setShowClickHint(false)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#1976D2',
+              cursor: 'pointer',
+              padding: '2px',
+              borderRadius: '2px',
+              display: 'flex',
+              alignItems: 'center',
+              opacity: 0.7,
+              fontSize: '14px'
+            }}
+            title="안내 닫기"
+          >
+            <FiX size={14} />
+          </button>
         </div>
       )}
       

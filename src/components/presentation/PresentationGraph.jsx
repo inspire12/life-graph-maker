@@ -207,7 +207,12 @@ function PresentationGraph({
   }
 
   const GraphContent = () => (
-    <div style={{ position: 'relative', width: '100%', height: isFullscreen ? '100vh' : height }}>
+    <div style={{ 
+      position: 'relative', 
+      width: '100%', 
+      height: isFullscreen ? '100vh' : height,
+      minHeight: isFullscreen ? '100vh' : `${height}px`
+    }}>
       {/* 전체화면 토글 버튼 */}
       <button
         className="fullscreen-toggle-btn"
