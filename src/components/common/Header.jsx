@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { FiHome, FiTrendingUp } from 'react-icons/fi';
+import GlobalThemeSelector from './GlobalThemeSelector';
 
 function Header() {
   const location = useLocation();
@@ -20,6 +21,7 @@ function Header() {
               홈
             </Link>
           )}
+          <GlobalThemeSelector />
         </nav>
       </div>
     </header>

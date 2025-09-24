@@ -6,11 +6,11 @@ import {
   XAxis, 
   YAxis, 
   CartesianGrid, 
-  ReferenceLine,
-  Dot
+  ReferenceLine
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiMaximize, FiMinimize } from 'react-icons/fi';
+import { getGraphStyles, getPresentationBackground, getThemeSVGFilters, getCustomDotStyle } from '../../styles/graphThemes';
 import { 
   prepareGraphData, 
   calculateXAxisDomain, 
@@ -24,7 +24,8 @@ function PresentationGraph({
   events = [], 
   currentEventIndex = 0,
   viewMode = 'timeline',
-  height = 300 
+  height = 300,
+  theme = 'modern' // 프리젠테이션에서 전달받는 테마
 }) {
   const [visibleDataPoints, setVisibleDataPoints] = useState([]);
   const [animationKey, setAnimationKey] = useState(0);
@@ -73,8 +74,8 @@ function PresentationGraph({
     }
   }, [currentEventIndex, events.length]);
 
-  // 현재 이벤트 강조를 위한 커스텀 점
-  const CustomDot = ({ cx, cy, payload, index }) => {
+  // 프리젠테이션용 커스텀 점 (테마 지원)
+  const PresentationCustomDot = ({ cx, cy, payload, index }) => {
     if (!payload) return null;
 
     const isCurrentEvent = events[currentEventIndex] && 
@@ -86,6 +87,8 @@ function PresentationGraph({
 
     const size = isCurrentEvent ? 14 : isPastEvent ? 8 : 6;
     const opacity = isFutureEvent ? 0.2 : isCurrentEvent ? 1 : 0.7;
+    const scale = isFullscreen ? 1.5 : 1;
+    const dotStyle = getCustomDotStyle(theme, payload, isCurrentEvent, scale);
 
     return (
       <g>
@@ -93,13 +96,12 @@ function PresentationGraph({
         <circle
           cx={cx}
           cy={cy}
-          r={size}
-          fill={payload.color}
-          stroke="#fff"
-          strokeWidth={2}
+          r={size * scale}
+          {...dotStyle}
           opacity={opacity}
           style={{
-            filter: isCurrentEvent ? 'drop-shadow(0 0 8px rgba(255,255,255,0.8))' : 'none'
+            ...dotStyle.style,
+            filter: isCurrentEvent ? 'drop-shadow(0 0 8px rgba(255,255,255,0.8))' : dotStyle.filter
           }}
         />
         
@@ -109,15 +111,15 @@ function PresentationGraph({
             <circle
               cx={cx}
               cy={cy}
-              r={size + 6}
+              r={(size + 6) * scale}
               fill="none"
               stroke="#fff"
-              strokeWidth={2}
+              strokeWidth={2 * scale}
               opacity={0.6}
             >
               <animate
                 attributeName="r"
-                values={`${size + 6};${size + 12};${size + 6}`}
+                values={`${(size + 6) * scale};${(size + 12) * scale};${(size + 6) * scale}`}
                 dur="2s"
                 repeatCount="indefinite"
               />
@@ -131,15 +133,15 @@ function PresentationGraph({
             <circle
               cx={cx}
               cy={cy}
-              r={size + 12}
+              r={(size + 12) * scale}
               fill="none"
               stroke={payload.color}
-              strokeWidth={1}
+              strokeWidth={1 * scale}
               opacity={0.4}
             >
               <animate
                 attributeName="r"
-                values={`${size + 12};${size + 20};${size + 12}`}
+                values={`${(size + 12) * scale};${(size + 20) * scale};${(size + 12) * scale}`}
                 dur="3s"
                 repeatCount="indefinite"
               />
@@ -158,10 +160,10 @@ function PresentationGraph({
           <circle
             cx={cx}
             cy={cy}
-            r={size + 4}
+            r={(size + 4) * scale}
             fill="none"
             stroke="#ffc107"
-            strokeWidth={1}
+            strokeWidth={1 * scale}
             opacity={0.5}
           />
         )}
@@ -206,278 +208,205 @@ function PresentationGraph({
     );
   }
 
-  const GraphContent = () => (
-    <div style={{ 
-      position: 'relative', 
-      width: '100%', 
-      height: isFullscreen ? '100vh' : height,
-      minHeight: isFullscreen ? '100vh' : `${height}px`
-    }}>
-      {/* 전체화면 토글 버튼 */}
-      <button
-        className="fullscreen-toggle-btn"
-        onClick={toggleFullscreen}
-        style={{
+  const GraphContent = () => {
+    const themeStyles = getGraphStyles(theme, isFullscreen);
+    const presentationBackground = getPresentationBackground(theme);
+    const svgFilters = getThemeSVGFilters({ id: theme, styles: themeStyles });
+
+    return (
+      <div style={{ 
+        position: 'relative', 
+        width: '100%', 
+        height: isFullscreen ? '100vh' : height,
+        minHeight: isFullscreen ? '100vh' : `${height}px`,
+        background: presentationBackground
+      }}>
+        {/* SVG 필터 정의 */}
+        {svgFilters.length > 0 && (
+          <svg width="0" height="0" style={{ position: 'absolute' }}>
+            <defs dangerouslySetInnerHTML={{ 
+              __html: svgFilters.join('') 
+            }} />
+          </svg>
+        )}
+
+        {/* 현재 테마 정보 표시 */}
+        <div style={{
           position: 'absolute',
           top: 10,
-          right: 10,
+          left: 10,
           zIndex: 1000,
-          background: 'rgba(0, 0, 0, 0.8)',
-          border: 'none',
-          borderRadius: '6px',
-          padding: '8px',
-          cursor: 'pointer',
+          background: 'rgba(0, 0, 0, 0.7)',
           color: 'white',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
+          padding: '4px 8px',
+          borderRadius: '4px',
           fontSize: '12px',
           backdropFilter: 'blur(4px)'
-        }}
-      >
-        {isFullscreen ? <FiMinimize size={16} /> : <FiMaximize size={16} />}
-        {isFullscreen ? '축소' : '확대'}
-      </button>
+        }}>
+          {theme} 테마
+        </div>
 
-      {/* 배경 그래프 (전체 경로) */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={clusteredData}
-            margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
-            
-            <XAxis
-              type={viewMode === 'timeline' ? 'number' : 'number'}
-              dataKey={viewMode === 'timeline' ? 'timestamp' : 'order'}
-              domain={xDomain}
-              ticks={viewMode === 'timeline' ? xTicks : undefined}
-              tickFormatter={formatXTick}
-              stroke="rgba(255,255,255,0.8)"
-              fontSize={isFullscreen ? 14 : 12}
-            />
-            
-            <YAxis
-              domain={yDomain}
-              tickFormatter={formatYTick}
-              stroke="rgba(255,255,255,0.8)"
-              fontSize={isFullscreen ? 14 : 12}
-            />
-            
-            {/* 0선 참조선 */}
-            <ReferenceLine y={0} stroke="rgba(255,255,255,0.5)" strokeDasharray="2 2" />
-            
-            {/* 감정 영역 참조선 */}
-            <ReferenceLine y={5} stroke="rgba(76,175,80,0.5)" strokeDasharray="1 1" />
-            <ReferenceLine y={-5} stroke="rgba(244,67,54,0.5)" strokeDasharray="1 1" />
-            
-            {/* 전체 라인 (미래 이벤트들 - 흐릿하게) */}
-            <Line
-              type="monotone"
-              dataKey="emotionScore"
-              stroke="rgba(100, 181, 246, 0.3)"
-              strokeWidth={isFullscreen ? 3 : 2}
-              strokeDasharray="5 5"
-              dot={<CustomDot />}
-              connectNulls={false}
-              animationDuration={0}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+        {/* 전체화면 토글 버튼 */}
+        <button
+          className="fullscreen-toggle-btn"
+          onClick={toggleFullscreen}
+          style={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            zIndex: 1000,
+            background: 'rgba(0, 0, 0, 0.8)',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '8px',
+            cursor: 'pointer',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            fontSize: '12px',
+            backdropFilter: 'blur(4px)'
+          }}
+        >
+          {isFullscreen ? <FiMinimize size={16} /> : <FiMaximize size={16} />}
+          {isFullscreen ? '축소' : '확대'}
+        </button>
 
-      {/* 진행된 라인 (현재 이벤트까지) */}
-      {visibleDataPoints.length > 0 && (
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
+        {/* 배경 그래프 (전체 경로 - 흐릿하게) */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.3 }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
-              data={visibleDataPoints}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-              key={animationKey}
+              data={clusteredData}
+              margin={{ 
+                top: 20, 
+                right: 30, 
+                left: theme === 'notebook' ? 80 : 20, 
+                bottom: 20 
+              }}
             >
+              <CartesianGrid 
+                stroke={themeStyles.cartesianGrid.stroke}
+                strokeDasharray={themeStyles.cartesianGrid.strokeDasharray}
+                opacity={0.2} 
+              />
+              
               <XAxis
                 type={viewMode === 'timeline' ? 'number' : 'number'}
                 dataKey={viewMode === 'timeline' ? 'timestamp' : 'order'}
                 domain={xDomain}
-                hide
+                ticks={viewMode === 'timeline' ? xTicks : undefined}
+                tickFormatter={formatXTick}
+                stroke="rgba(255,255,255,0.6)"
+                fontSize={themeStyles.xAxis.fontSize}
+                fontFamily={themeStyles.xAxis.fontFamily}
               />
               
-              <YAxis domain={yDomain} hide />
+              <YAxis
+                domain={yDomain}
+                tickFormatter={formatYTick}
+                stroke="rgba(255,255,255,0.6)"
+                fontSize={themeStyles.yAxis.fontSize}
+                fontFamily={themeStyles.yAxis.fontFamily}
+              />
               
-              {/* 진행된 라인 */}
+              {/* 0선 참조선 */}
+              <ReferenceLine 
+                y={0} 
+                stroke={themeStyles.referenceLine.stroke}
+                strokeDasharray={themeStyles.referenceLine.strokeDasharray}
+                opacity={0.3} 
+              />
+              
+              {/* 감정 영역 참조선 */}
+              <ReferenceLine 
+                y={5} 
+                stroke={themeStyles.positiveReferenceLine.stroke}
+                strokeDasharray={themeStyles.positiveReferenceLine.strokeDasharray}
+                opacity={0.2} 
+              />
+              <ReferenceLine 
+                y={-5} 
+                stroke={themeStyles.negativeReferenceLine.stroke}
+                strokeDasharray={themeStyles.negativeReferenceLine.strokeDasharray}
+                opacity={0.2} 
+              />
+              
+              {/* 전체 라인 (미래 이벤트들 - 흐릿하게) */}
               <Line
                 type="monotone"
                 dataKey="emotionScore"
-                stroke="#64B5F6"
-                strokeWidth={isFullscreen ? 6 : 4}
+                stroke="rgba(100, 181, 246, 0.2)"
+                strokeWidth={isFullscreen ? 3 : 2}
+                strokeDasharray="5 5"
                 dot={false}
                 connectNulls={false}
-                animationDuration={1000}
-                animationBegin={0}
-              />
-              
-              {/* 현재 이벤트 강조 점 */}
-              <Line
-                type="monotone"
-                dataKey="emotionScore"
-                stroke="transparent"
-                strokeWidth={0}
-                dot={(props) => {
-                  const { cx, cy, payload, index } = props;
-                  if (!payload || index !== visibleDataPoints.length - 1) return null;
-                  
-                  const currentEvent = events[currentEventIndex];
-                  const isCurrentEvent = currentEvent && payload.originalEvent && 
-                    payload.originalEvent.id === currentEvent.id;
-                  
-                  if (!isCurrentEvent) return null;
-                  
-                  const scale = isFullscreen ? 1.5 : 1;
-                  const mainRadius = 16 * scale;
-                  const innerRadius = 8 * scale;
-                  
-                  return (
-                    <g>
-                      {/* 메인 점 */}
-                      <circle
-                        cx={cx}
-                        cy={cy}
-                        r={mainRadius}
-                        fill="#64B5F6"
-                        stroke="#fff"
-                        strokeWidth={3 * scale}
-                        style={{
-                          filter: `drop-shadow(0 0 ${12 * scale}px rgba(100, 181, 246, 0.8))`
-                        }}
-                      />
-                      
-                      {/* 내부 하이라이트 */}
-                      <circle
-                        cx={cx}
-                        cy={cy}
-                        r={innerRadius}
-                        fill="#fff"
-                        opacity={0.8}
-                      />
-                      
-                      {/* 펄스 애니메이션 레이어 1 */}
-                      <circle
-                        cx={cx}
-                        cy={cy}
-                        r={20 * scale}
-                        fill="none"
-                        stroke="#fff"
-                        strokeWidth={2 * scale}
-                        opacity={0.6}
-                      >
-                        <animate
-                          attributeName="r"
-                          values={`${20 * scale};${35 * scale};${20 * scale}`}
-                          dur="2s"
-                          repeatCount="indefinite"
-                        />
-                        <animate
-                          attributeName="opacity"
-                          values="0.6;0.1;0.6"
-                          dur="2s"
-                          repeatCount="indefinite"
-                        />
-                      </circle>
-                      
-                      {/* 펄스 애니메이션 레이어 2 */}
-                      <circle
-                        cx={cx}
-                        cy={cy}
-                        r={25 * scale}
-                        fill="none"
-                        stroke="#64B5F6"
-                        strokeWidth={1 * scale}
-                        opacity={0.4}
-                      >
-                        <animate
-                          attributeName="r"
-                          values={`${25 * scale};${45 * scale};${25 * scale}`}
-                          dur="3s"
-                          repeatCount="indefinite"
-                        />
-                        <animate
-                          attributeName="opacity"
-                          values="0.4;0.05;0.4"
-                          dur="3s"
-                          repeatCount="indefinite"
-                        />
-                      </circle>
-                      
-                      {/* 이벤트 정보 라벨 */}
-                      <foreignObject
-                        x={cx + 25 * scale}
-                        y={cy - 15 * scale}
-                        width={150 * scale}
-                        height={30 * scale}
-                        style={{ pointerEvents: 'none' }}
-                      >
-                        <div style={{
-                          background: 'rgba(0, 0, 0, 0.8)',
-                          color: 'white',
-                          padding: `${4 * scale}px ${8 * scale}px`,
-                          borderRadius: `${4 * scale}px`,
-                          fontSize: `${12 * scale}px`,
-                          whiteSpace: 'nowrap',
-                          border: `1px solid rgba(100, 181, 246, 0.5)`,
-                          backdropFilter: 'blur(4px)'
-                        }}>
-                          {payload.title}
-                        </div>
-                      </foreignObject>
-                      
-                      {/* 감정 점수 표시 */}
-                      <text
-                        x={cx}
-                        y={cy + 35 * scale}
-                        textAnchor="middle"
-                        fill="#fff"
-                        fontSize={14 * scale}
-                        fontWeight="bold"
-                        style={{
-                          textShadow: '0 0 4px rgba(0,0,0,0.8)',
-                          filter: 'drop-shadow(0 0 2px rgba(100, 181, 246, 0.8))'
-                        }}
-                      >
-                        {payload.emotionScore > 0 ? '+' : ''}{payload.emotionScore}
-                      </text>
-                    </g>
-                  );
-                }}
-                connectNulls={false}
-                animationDuration={500}
-                animationBegin={800}
+                animationDuration={0}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
-      )}
 
-      {/* 전체화면 상태 안내 */}
-      {isFullscreen && (
-        <div style={{
-          position: 'absolute',
-          bottom: 20,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'rgba(0, 0, 0, 0.8)',
-          color: 'white',
-          padding: '8px 16px',
-          borderRadius: '20px',
-          fontSize: '14px',
-          backdropFilter: 'blur(4px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)'
-        }}>
-          ESC 키를 눌러 전체화면을 종료하세요
-        </div>
-      )}
-    </div>
-  );
+        {/* 진행된 라인 (현재 이벤트까지) */}
+        {visibleDataPoints.length > 0 && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={visibleDataPoints}
+                margin={{ 
+                  top: 20, 
+                  right: 30, 
+                  left: theme === 'notebook' ? 80 : 20, 
+                  bottom: 20 
+                }}
+                key={animationKey}
+              >
+                <XAxis
+                  type={viewMode === 'timeline' ? 'number' : 'number'}
+                  dataKey={viewMode === 'timeline' ? 'timestamp' : 'order'}
+                  domain={xDomain}
+                  hide
+                />
+                
+                <YAxis domain={yDomain} hide />
+                
+                {/* 진행된 라인 */}
+                <Line
+                  type="monotone"
+                  dataKey="emotionScore"
+                  stroke={themeStyles.line.stroke}
+                  strokeWidth={isFullscreen ? 6 : 4}
+                  strokeDasharray={themeStyles.line.strokeDasharray}
+                  dot={<PresentationCustomDot />}
+                  connectNulls={false}
+                  animationDuration={1000}
+                  animationBegin={0}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* 전체화면 상태 안내 */}
+        {isFullscreen && (
+          <div style={{
+            position: 'absolute',
+            bottom: 20,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(0, 0, 0, 0.8)',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: '20px',
+            fontSize: '14px',
+            backdropFilter: 'blur(4px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}>
+            ESC 키를 눌러 전체화면을 종료하세요
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <>

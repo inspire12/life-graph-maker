@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiX, FiChevronLeft, FiChevronRight, FiPlay, FiPause } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { FiX, FiChevronLeft, FiChevronRight, FiPlay, FiPause, FiEyeOff, FiEye, FiMonitor, FiSmartphone } from 'react-icons/fi';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useTheme } from '../contexts/ThemeContext';
 import { graphService } from '../services/graphService';
 import { eventService } from '../services/eventService';
 import PresentationGraph from '../components/presentation/PresentationGraph';
+import ThemeSelector from '../components/common/ThemeSelector';
+import GlobalThemeSelector from '../components/common/GlobalThemeSelector';
 
 function Presentation() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { controlsVisible, toggleControls, currentTheme: globalTheme } = useTheme();
   const [graph, setGraph] = useState(null);
   const [events, setEvents] = useState([]);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
@@ -16,6 +20,25 @@ function Presentation() {
   const [isAutoPlay, setIsAutoPlay] = useState(false);
   const [minImportance, setMinImportance] = useState(3);
   const [autoPlayInterval, setAutoPlayInterval] = useState(5000); // 5초
+  
+  // 전역 테마에 따라 그래프 테마 자동 매핑
+  const getGraphThemeFromGlobalTheme = (globalTheme) => {
+    const themeMapping = {
+      'light': 'modern',
+      'dark': 'minimal',
+      'book': 'notebook',
+      'handwritten': 'handwritten'
+    };
+    return themeMapping[globalTheme] || 'modern';
+  };
+  
+  const [currentTheme, setCurrentTheme] = useState(() => getGraphThemeFromGlobalTheme(globalTheme));
+  const [layoutMode, setLayoutMode] = useState('horizontal'); // 'horizontal' | 'vertical'
+
+  // 전역 테마 변경 시 그래프 테마도 자동 업데이트
+  useEffect(() => {
+    setCurrentTheme(getGraphThemeFromGlobalTheme(globalTheme));
+  }, [globalTheme]);
 
   useEffect(() => {
     loadGraph();
@@ -125,6 +148,37 @@ function Presentation() {
         e.preventDefault();
         toggleAutoPlay();
         break;
+      case 'h':
+      case 'H':
+        e.preventDefault();
+        toggleControls();
+        break;
+      case 'l':
+      case 'L':
+        e.preventDefault();
+        setLayoutMode(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
+        break;
+      // 테마 변경 단축키 (1-5)
+      case '1':
+        e.preventDefault();
+        setCurrentTheme('modern');
+        break;
+      case '2':
+        e.preventDefault();
+        setCurrentTheme('analog');
+        break;
+      case '3':
+        e.preventDefault();
+        setCurrentTheme('handwritten');
+        break;
+      case '4':
+        e.preventDefault();
+        setCurrentTheme('notebook');
+        break;
+      case '5':
+        e.preventDefault();
+        setCurrentTheme('minimal');
+        break;
       default:
         // 다른 키 입력 시에는 자동 진행을 정지하지 않음
         break;
@@ -173,18 +227,33 @@ function Presentation() {
             </div>
           </div>
         </div>
-        <button onClick={handleExit} className="btn btn-close">
-          <FiX /> ESC로 나가기
-        </button>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <GlobalThemeSelector showUpward={true} />
+          <button 
+            onClick={() => setLayoutMode(prev => prev === 'horizontal' ? 'vertical' : 'horizontal')} 
+            className="btn btn-control"
+          >
+            {layoutMode === 'horizontal' ? <FiSmartphone /> : <FiMonitor />}
+            {layoutMode === 'horizontal' ? '세로 모드' : '가로 모드'}
+          </button>
+          <button onClick={toggleControls} className="btn btn-control">
+            {controlsVisible ? <FiEyeOff /> : <FiEye />}
+            {controlsVisible ? '컨트롤 숨김' : '컨트롤 보기'}
+          </button>
+          <button onClick={handleExit} className="btn btn-close">
+            <FiX /> ESC로 나가기
+          </button>
+        </div>
       </header>
 
-      <main className="presentation-main">
+      <main className={`presentation-main ${layoutMode === 'vertical' ? 'vertical-layout' : 'horizontal-layout'}`}>
         <div className="graph-section">
           <PresentationGraph
             events={events}
             currentEventIndex={currentEventIndex}
             viewMode="timeline"
-            height={350}
+            height={layoutMode === 'vertical' ? 250 : 350}
+            theme={currentTheme}
           />
         </div>
 
@@ -303,60 +372,84 @@ function Presentation() {
         </div>
       </main>
 
-      <footer className="presentation-controls" onClick={handleStopAutoPlay}>
-        <div className="importance-filter">
-          <label>중요도 필터:</label>
-          <select 
-            value={minImportance} 
-            onChange={(e) => setMinImportance(Number(e.target.value))}
+      <AnimatePresence>
+        {controlsVisible && (
+          <motion.footer 
+            className="presentation-controls" 
+            onClick={handleStopAutoPlay}
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            <option value={1}>⭐ 1점 이상</option>
-            <option value={2}>⭐⭐ 2점 이상</option>
-            <option value={3}>⭐⭐⭐ 3점 이상</option>
-            <option value={4}>⭐⭐⭐⭐ 4점 이상</option>
-            <option value={5}>⭐⭐⭐⭐⭐ 5점만</option>
-          </select>
-        </div>
-
-        <div className="auto-play-controls">
-          <label>자동 진행 속도:</label>
-          <select 
-            value={autoPlayInterval} 
-            onChange={(e) => setAutoPlayInterval(Number(e.target.value))}
-            disabled={isAutoPlay}
-          >
-            <option value={2000}>빠름 (2초)</option>
-            <option value={3000}>보통 (3초)</option>
-            <option value={5000}>느림 (5초)</option>
-            <option value={8000}>매우 느림 (8초)</option>
-          </select>
-        </div>
-
-        <div className="navigation-controls">
-          <button onClick={handlePrevious} className="btn btn-control">
-            <FiChevronLeft /> 이전
-          </button>
-          
-          <button onClick={toggleAutoPlay} className="btn btn-control auto-play-btn">
-            {isAutoPlay ? <FiPause /> : <FiPlay />}
-            {isAutoPlay ? '정지' : '자동'}
-            {isAutoPlay && (
-              <div className="auto-play-indicator">
-                <div className="pulse-dot"></div>
+            <div className="controls-top-row">
+              <div className="importance-filter">
+                <label>중요도 필터:</label>
+                <select 
+                  value={minImportance} 
+                  onChange={(e) => setMinImportance(Number(e.target.value))}
+                >
+                  <option value={1}>⭐ 1점 이상</option>
+                  <option value={2}>⭐⭐ 2점 이상</option>
+                  <option value={3}>⭐⭐⭐ 3점 이상</option>
+                  <option value={4}>⭐⭐⭐⭐ 4점 이상</option>
+                  <option value={5}>⭐⭐⭐⭐⭐ 5점만</option>
+                </select>
               </div>
-            )}
-          </button>
-          
-          <button onClick={handleNext} className="btn btn-control">
-            다음 <FiChevronRight />
-          </button>
-        </div>
 
-        <div className="keyboard-hints">
-          ← 이전 | 스페이스/→ 다음 | P 자동진행 | ESC 나가기
-          {isAutoPlay && <span className="auto-status"> | 🔄 자동 진행 중</span>}
-        </div>
-      </footer>
+              <div className="theme-selector-wrapper">
+                <label>테마:</label>
+                <ThemeSelector 
+                  currentTheme={currentTheme}
+                  onThemeChange={setCurrentTheme}
+                  className="presentation-theme-selector"
+                />
+              </div>
+
+              <div className="auto-play-controls">
+                <label>자동 진행 속도:</label>
+                <select 
+                  value={autoPlayInterval} 
+                  onChange={(e) => setAutoPlayInterval(Number(e.target.value))}
+                  disabled={isAutoPlay}
+                >
+                  <option value={2000}>빠름 (2초)</option>
+                  <option value={3000}>보통 (3초)</option>
+                  <option value={5000}>느림 (5초)</option>
+                  <option value={8000}>매우 느림 (8초)</option>
+                </select>
+              </div>
+
+              <div className="navigation-controls">
+                <button onClick={handlePrevious} className="btn btn-control">
+                  <FiChevronLeft /> 이전
+                </button>
+                
+                <button onClick={toggleAutoPlay} className="btn btn-control auto-play-btn">
+                  {isAutoPlay ? <FiPause /> : <FiPlay />}
+                  {isAutoPlay ? '정지' : '자동'}
+                  {isAutoPlay && (
+                    <div className="auto-play-indicator">
+                      <div className="pulse-dot"></div>
+                    </div>
+                  )}
+                </button>
+                
+                <button onClick={handleNext} className="btn btn-control">
+                  다음 <FiChevronRight />
+                </button>
+              </div>
+            </div>
+
+            <div className="controls-bottom-row">
+              <div className="keyboard-hints">
+                ← 이전 | 스페이스/→ 다음 | P 자동진행 | L 레이아웃 전환 | 1-5 테마변경 | H 컨트롤 숨김/보기 | ESC 나가기
+                {isAutoPlay && <span className="auto-status"> | 🔄 자동 진행 중</span>}
+              </div>
+            </div>
+          </motion.footer>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
