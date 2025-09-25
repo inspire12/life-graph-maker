@@ -19,6 +19,7 @@ import {
   generateXAxisTicks,
   clusterEventsByDate
 } from '../../utils/graphHelpers';
+import RoughGraph from './RoughGraph';
 
 function PresentationGraph({ 
   events = [], 
@@ -27,6 +28,18 @@ function PresentationGraph({
   height = 300,
   theme = 'modern' // 프리젠테이션에서 전달받는 테마
 }) {
+  // handwritten 테마일 때는 RoughGraph 사용
+  if (theme === 'handwritten') {
+    return (
+      <RoughGraph
+        events={events}
+        currentEventIndex={currentEventIndex}
+        viewMode={viewMode}
+        height={height}
+        theme={theme}
+      />
+    );
+  }
   const [visibleDataPoints, setVisibleDataPoints] = useState([]);
   const [animationKey, setAnimationKey] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -178,8 +191,16 @@ function PresentationGraph({
 
   // Y축 틱 포맷터
   const formatYTick = (value) => {
-    return value > 0 ? `+${value}` : value.toString();
+    if (value === 0) return '0';
+    if (value > 0) return `+${value}`;
+    return value.toString();
   };
+
+  // 축 레이블 추가
+  const getAxisLabels = () => ({
+    xAxisLabel: viewMode === 'timeline' ? '시간 흐름' : '이벤트 순서',
+    yAxisLabel: '감정 점수'
+  });
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
@@ -233,17 +254,19 @@ function PresentationGraph({
         {/* 현재 테마 정보 표시 */}
         <div style={{
           position: 'absolute',
-          top: 10,
-          left: 10,
+          top: isFullscreen ? 20 : 10,
+          left: isFullscreen ? 20 : 10,
           zIndex: 1000,
-          background: 'rgba(0, 0, 0, 0.7)',
+          background: 'rgba(0, 0, 0, 0.8)',
           color: 'white',
-          padding: '4px 8px',
-          borderRadius: '4px',
-          fontSize: '12px',
-          backdropFilter: 'blur(4px)'
+          padding: isFullscreen ? '8px 16px' : '6px 12px',
+          borderRadius: '8px',
+          fontSize: isFullscreen ? '14px' : '12px',
+          backdropFilter: 'blur(8px)',
+          fontWeight: '500',
+          border: '1px solid rgba(255, 255, 255, 0.2)'
         }}>
-          {theme} 테마
+          <span style={{ opacity: 0.8 }}>테마:</span> {theme}
         </div>
 
         {/* 전체화면 토글 버튼 */}
@@ -252,23 +275,25 @@ function PresentationGraph({
           onClick={toggleFullscreen}
           style={{
             position: 'absolute',
-            top: 10,
-            right: 10,
+            top: isFullscreen ? 20 : 10,
+            right: isFullscreen ? 20 : 10,
             zIndex: 1000,
             background: 'rgba(0, 0, 0, 0.8)',
-            border: 'none',
-            borderRadius: '6px',
-            padding: '8px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '8px',
+            padding: isFullscreen ? '12px 16px' : '8px 12px',
             cursor: 'pointer',
             color: 'white',
             display: 'flex',
             alignItems: 'center',
-            gap: '4px',
-            fontSize: '12px',
-            backdropFilter: 'blur(4px)'
+            gap: '6px',
+            fontSize: isFullscreen ? '14px' : '12px',
+            fontWeight: '500',
+            backdropFilter: 'blur(8px)',
+            transition: 'all 0.2s ease'
           }}
         >
-          {isFullscreen ? <FiMinimize size={16} /> : <FiMaximize size={16} />}
+          {isFullscreen ? <FiMinimize size={18} /> : <FiMaximize size={16} />}
           {isFullscreen ? '축소' : '확대'}
         </button>
 
@@ -278,16 +303,17 @@ function PresentationGraph({
             <LineChart
               data={clusteredData}
               margin={{ 
-                top: 20, 
-                right: 30, 
-                left: theme === 'notebook' ? 80 : 20, 
-                bottom: 20 
+                top: isFullscreen ? 40 : 30, 
+                right: isFullscreen ? 50 : 40, 
+                left: theme === 'notebook' ? (isFullscreen ? 120 : 80) : (isFullscreen ? 50 : 30), 
+                bottom: isFullscreen ? 60 : 40 
               }}
             >
               <CartesianGrid 
                 stroke={themeStyles.cartesianGrid.stroke}
                 strokeDasharray={themeStyles.cartesianGrid.strokeDasharray}
-                opacity={0.2} 
+                opacity={isFullscreen ? 0.4 : 0.2}
+                strokeWidth={isFullscreen ? 1.5 : 1}
               />
               
               <XAxis
@@ -297,16 +323,18 @@ function PresentationGraph({
                 ticks={viewMode === 'timeline' ? xTicks : undefined}
                 tickFormatter={formatXTick}
                 stroke="rgba(255,255,255,0.6)"
-                fontSize={themeStyles.xAxis.fontSize}
+                fontSize={isFullscreen ? themeStyles.xAxis.fontSize * 1.4 : themeStyles.xAxis.fontSize}
                 fontFamily={themeStyles.xAxis.fontFamily}
+                height={isFullscreen ? 50 : 30}
               />
               
               <YAxis
                 domain={yDomain}
                 tickFormatter={formatYTick}
                 stroke="rgba(255,255,255,0.6)"
-                fontSize={themeStyles.yAxis.fontSize}
+                fontSize={isFullscreen ? themeStyles.yAxis.fontSize * 1.4 : themeStyles.yAxis.fontSize}
                 fontFamily={themeStyles.yAxis.fontFamily}
+                width={isFullscreen ? 80 : 50}
               />
               
               {/* 0선 참조선 */}
@@ -322,13 +350,15 @@ function PresentationGraph({
                 y={5} 
                 stroke={themeStyles.positiveReferenceLine.stroke}
                 strokeDasharray={themeStyles.positiveReferenceLine.strokeDasharray}
-                opacity={0.2} 
+                opacity={isFullscreen ? 0.4 : 0.2}
+                strokeWidth={isFullscreen ? 2 : 1}
               />
               <ReferenceLine 
                 y={-5} 
                 stroke={themeStyles.negativeReferenceLine.stroke}
                 strokeDasharray={themeStyles.negativeReferenceLine.strokeDasharray}
-                opacity={0.2} 
+                opacity={isFullscreen ? 0.4 : 0.2}
+                strokeWidth={isFullscreen ? 2 : 1}
               />
               
               {/* 전체 라인 (미래 이벤트들 - 흐릿하게) */}
@@ -353,10 +383,10 @@ function PresentationGraph({
               <LineChart
                 data={visibleDataPoints}
                 margin={{ 
-                  top: 20, 
-                  right: 30, 
-                  left: theme === 'notebook' ? 80 : 20, 
-                  bottom: 20 
+                  top: isFullscreen ? 40 : 30, 
+                  right: isFullscreen ? 50 : 40, 
+                  left: theme === 'notebook' ? (isFullscreen ? 120 : 80) : (isFullscreen ? 50 : 30), 
+                  bottom: isFullscreen ? 60 : 40 
                 }}
                 key={animationKey}
               >
@@ -374,32 +404,67 @@ function PresentationGraph({
                   type="monotone"
                   dataKey="emotionScore"
                   stroke={themeStyles.line.stroke}
-                  strokeWidth={isFullscreen ? 6 : 4}
+                  strokeWidth={isFullscreen ? 8 : 5}
                   strokeDasharray={themeStyles.line.strokeDasharray}
                   dot={<PresentationCustomDot />}
                   connectNulls={false}
-                  animationDuration={1000}
+                  animationDuration={1500}
                   animationBegin={0}
+                  style={{
+                    filter: isFullscreen ? 'drop-shadow(0 0 12px rgba(100, 181, 246, 0.6))' : 'drop-shadow(0 0 8px rgba(100, 181, 246, 0.4))'
+                  }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
         )}
 
+        {/* 축 레이블 추가 (전체화면에서만) */}
+        {isFullscreen && (
+          <>
+            <div style={{
+              position: 'absolute',
+              bottom: 10,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              color: 'rgba(255, 255, 255, 0.8)',
+              fontSize: '16px',
+              fontWeight: '500',
+              textShadow: '0 0 10px rgba(0, 0, 0, 0.5)'
+            }}>
+              {getAxisLabels().xAxisLabel}
+            </div>
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: 10,
+              transform: 'translateY(-50%) rotate(-90deg)',
+              color: 'rgba(255, 255, 255, 0.8)',
+              fontSize: '16px',
+              fontWeight: '500',
+              textShadow: '0 0 10px rgba(0, 0, 0, 0.5)'
+            }}>
+              {getAxisLabels().yAxisLabel}
+            </div>
+          </>
+        )}
+
         {/* 전체화면 상태 안내 */}
         {isFullscreen && (
           <div style={{
             position: 'absolute',
-            bottom: 20,
+            bottom: 50,
             left: '50%',
             transform: 'translateX(-50%)',
             background: 'rgba(0, 0, 0, 0.8)',
             color: 'white',
-            padding: '8px 16px',
-            borderRadius: '20px',
-            fontSize: '14px',
-            backdropFilter: 'blur(4px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)'
+            padding: '12px 24px',
+            borderRadius: '25px',
+            fontSize: '16px',
+            fontWeight: '500',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
           }}>
             ESC 키를 눌러 전체화면을 종료하세요
           </div>

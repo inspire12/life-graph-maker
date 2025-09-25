@@ -375,6 +375,7 @@ body {
 
 .emotion-score {
   font-weight: 600;
+  color: #333333;
 }
 
 .timeline-time {
@@ -1252,7 +1253,7 @@ body {
 
 .emotion-label {
   font-size: 0.75rem;
-  color: #666;
+  color: white;
   font-weight: 500;
 }
 

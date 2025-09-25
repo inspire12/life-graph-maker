@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiX, FiChevronLeft, FiChevronRight, FiPlay, FiPause, FiEyeOff, FiEye, FiMonitor, FiSmartphone } from 'react-icons/fi';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import { graphService } from '../services/graphService';
 import { eventService } from '../services/eventService';
 import PresentationGraph from '../components/presentation/PresentationGraph';
-import ThemeSelector from '../components/common/ThemeSelector';
-import GlobalThemeSelector from '../components/common/GlobalThemeSelector';
+import ControlPanel from '../components/presentation/ControlPanel';
 
 function Presentation() {
   const { id } = useParams();
@@ -33,7 +31,7 @@ function Presentation() {
   };
   
   const [currentTheme, setCurrentTheme] = useState(() => getGraphThemeFromGlobalTheme(globalTheme));
-  const [layoutMode, setLayoutMode] = useState('horizontal'); // 'horizontal' | 'vertical'
+  const [layoutMode, setLayoutMode] = useState('vertical'); // 'horizontal' | 'vertical'
 
   // 전역 테마 변경 시 그래프 테마도 자동 업데이트
   useEffect(() => {
@@ -129,7 +127,7 @@ function Presentation() {
     setIsAutoPlay(!isAutoPlay);
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = useCallback((e) => {
     switch (e.key) {
       case 'Escape':
         handleExit();
@@ -183,12 +181,12 @@ function Presentation() {
         // 다른 키 입력 시에는 자동 진행을 정지하지 않음
         break;
     }
-  };
+  }, [handleExit, handlePrevious, handleNext, toggleAutoPlay, toggleControls, setLayoutMode, setCurrentTheme]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
+  }, [handleKeyPress]);
 
   if (loading) {
     return <div className="presentation-loading">로딩 중...</div>;
@@ -212,47 +210,14 @@ function Presentation() {
 
   return (
     <div className="presentation-container">
-      <header className="presentation-header">
-        <div className="presentation-title">
-          <h1>{graph.title}</h1>
-          <div className="presentation-progress">
-            <span>이벤트 {currentEventIndex + 1} / {events.length}</span>
-            <div className="progress-bar">
-              <motion.div 
-                className="progress-fill"
-                initial={{ width: 0 }}
-                animate={{ width: `${((currentEventIndex + 1) / events.length) * 100}%` }}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
-              />
-            </div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <GlobalThemeSelector showUpward={true} />
-          <button 
-            onClick={() => setLayoutMode(prev => prev === 'horizontal' ? 'vertical' : 'horizontal')} 
-            className="btn btn-control"
-          >
-            {layoutMode === 'horizontal' ? <FiSmartphone /> : <FiMonitor />}
-            {layoutMode === 'horizontal' ? '세로 모드' : '가로 모드'}
-          </button>
-          <button onClick={toggleControls} className="btn btn-control">
-            {controlsVisible ? <FiEyeOff /> : <FiEye />}
-            {controlsVisible ? '컨트롤 숨김' : '컨트롤 보기'}
-          </button>
-          <button onClick={handleExit} className="btn btn-close">
-            <FiX /> ESC로 나가기
-          </button>
-        </div>
-      </header>
-
+      {/* 깔끔한 프리젠테이션 화면 */}
       <main className={`presentation-main ${layoutMode === 'vertical' ? 'vertical-layout' : 'horizontal-layout'}`}>
         <div className="graph-section">
           <PresentationGraph
             events={events}
             currentEventIndex={currentEventIndex}
             viewMode="timeline"
-            height={layoutMode === 'vertical' ? 250 : 350}
+            height={layoutMode === 'vertical' ? 300 : 400}
             theme={currentTheme}
           />
         </div>
@@ -323,14 +288,16 @@ function Presentation() {
                 </motion.div>
               )}
 
-              <motion.div 
-                className="event-content"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-              >
-                <p>{currentEvent.description}</p>
-              </motion.div>
+              {currentEvent.description && (
+                <motion.div 
+                  className="event-content"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <p>{currentEvent.description}</p>
+                </motion.div>
+              )}
 
               <motion.div 
                 className="event-details"
@@ -344,9 +311,8 @@ function Presentation() {
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.6, type: "spring" }}
                 >
-                  <strong>감정 점수:</strong> 
                   <span className={`emotion-value ${currentEvent.emotionScore >= 0 ? 'positive' : 'negative'}`}>
-                    {currentEvent.emotionScore > 0 ? '+' : ''}{currentEvent.emotionScore}/10
+                    {currentEvent.emotionScore > 0 ? '+' : ''}{currentEvent.emotionScore}
                   </span>
                 </motion.div>
                 <motion.div 
@@ -355,7 +321,6 @@ function Presentation() {
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.7, type: "spring" }}
                 >
-                  <strong>중요도:</strong> 
                   <span className="stars">{'★'.repeat(currentEvent.importanceRate)}</span>
                 </motion.div>
                 <motion.div 
@@ -364,7 +329,7 @@ function Presentation() {
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.8, type: "spring" }}
                 >
-                  <strong>카테고리:</strong> {currentEvent.category}
+                  {currentEvent.category}
                 </motion.div>
               </motion.div>
             </motion.div>
@@ -372,84 +337,26 @@ function Presentation() {
         </div>
       </main>
 
-      <AnimatePresence>
-        {controlsVisible && (
-          <motion.footer 
-            className="presentation-controls" 
-            onClick={handleStopAutoPlay}
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
-            <div className="controls-top-row">
-              <div className="importance-filter">
-                <label>중요도 필터:</label>
-                <select 
-                  value={minImportance} 
-                  onChange={(e) => setMinImportance(Number(e.target.value))}
-                >
-                  <option value={1}>⭐ 1점 이상</option>
-                  <option value={2}>⭐⭐ 2점 이상</option>
-                  <option value={3}>⭐⭐⭐ 3점 이상</option>
-                  <option value={4}>⭐⭐⭐⭐ 4점 이상</option>
-                  <option value={5}>⭐⭐⭐⭐⭐ 5점만</option>
-                </select>
-              </div>
-
-              <div className="theme-selector-wrapper">
-                <label>테마:</label>
-                <ThemeSelector 
-                  currentTheme={currentTheme}
-                  onThemeChange={setCurrentTheme}
-                  className="presentation-theme-selector"
-                />
-              </div>
-
-              <div className="auto-play-controls">
-                <label>자동 진행 속도:</label>
-                <select 
-                  value={autoPlayInterval} 
-                  onChange={(e) => setAutoPlayInterval(Number(e.target.value))}
-                  disabled={isAutoPlay}
-                >
-                  <option value={2000}>빠름 (2초)</option>
-                  <option value={3000}>보통 (3초)</option>
-                  <option value={5000}>느림 (5초)</option>
-                  <option value={8000}>매우 느림 (8초)</option>
-                </select>
-              </div>
-
-              <div className="navigation-controls">
-                <button onClick={handlePrevious} className="btn btn-control">
-                  <FiChevronLeft /> 이전
-                </button>
-                
-                <button onClick={toggleAutoPlay} className="btn btn-control auto-play-btn">
-                  {isAutoPlay ? <FiPause /> : <FiPlay />}
-                  {isAutoPlay ? '정지' : '자동'}
-                  {isAutoPlay && (
-                    <div className="auto-play-indicator">
-                      <div className="pulse-dot"></div>
-                    </div>
-                  )}
-                </button>
-                
-                <button onClick={handleNext} className="btn btn-control">
-                  다음 <FiChevronRight />
-                </button>
-              </div>
-            </div>
-
-            <div className="controls-bottom-row">
-              <div className="keyboard-hints">
-                ← 이전 | 스페이스/→ 다음 | P 자동진행 | L 레이아웃 전환 | 1-5 테마변경 | H 컨트롤 숨김/보기 | ESC 나가기
-                {isAutoPlay && <span className="auto-status"> | 🔄 자동 진행 중</span>}
-              </div>
-            </div>
-          </motion.footer>
-        )}
-      </AnimatePresence>
+      {/* 플로팅 컨트롤 패널 */}
+      <ControlPanel
+        handlePrevious={handlePrevious}
+        handleNext={handleNext}
+        toggleAutoPlay={toggleAutoPlay}
+        isAutoPlay={isAutoPlay}
+        minImportance={minImportance}
+        setMinImportance={setMinImportance}
+        currentTheme={currentTheme}
+        setCurrentTheme={setCurrentTheme}
+        autoPlayInterval={autoPlayInterval}
+        setAutoPlayInterval={setAutoPlayInterval}
+        layoutMode={layoutMode}
+        setLayoutMode={setLayoutMode}
+        controlsVisible={controlsVisible}
+        toggleControls={toggleControls}
+        handleExit={handleExit}
+        currentEventIndex={currentEventIndex}
+        totalEvents={events.length}
+      />
     </div>
   );
 }

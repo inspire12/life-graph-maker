@@ -17,7 +17,7 @@ function GraphEdit() {
   const [graph, setGraph] = useState(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('timeline'); // 'timeline' or 'sequence'
-  const [listViewMode, setListViewMode] = useState('grid'); // 'grid' or 'timeline'
+  const [listViewMode, setListViewMode] = useState('timeline'); // 'grid' or 'timeline'
   const [selectedCategories, setSelectedCategories] = useState([]); // 카테고리 필터
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
@@ -262,13 +262,13 @@ function GraphEdit() {
               className={`btn ${viewMode === 'timeline' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => handleViewModeChange('timeline')}
             >
-              시간순
+              타임라인
             </button>
             <button
               className={`btn ${viewMode === 'sequence' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => handleViewModeChange('sequence')}
             >
-              이벤트순
+              순서별
             </button>
           </div>
           
@@ -297,18 +297,18 @@ function GraphEdit() {
               <h3>이벤트 목록 ({filteredEvents.length}개{selectedCategories.length > 0 ? ` / 전체 ${graph.events?.length || 0}개` : ''})</h3>
               <div className="view-toggle">
                 <button
-                  className={`view-toggle-btn ${listViewMode === 'grid' ? 'active' : ''}`}
-                  onClick={() => setListViewMode('grid')}
-                  title="그리드 보기"
-                >
-                  <FiGrid size={16} />
-                </button>
-                <button
                   className={`view-toggle-btn ${listViewMode === 'timeline' ? 'active' : ''}`}
                   onClick={() => setListViewMode('timeline')}
                   title="타임라인 보기"
                 >
                   <FiClock size={16} />
+                </button>
+                <button
+                    className={`view-toggle-btn ${listViewMode === 'grid' ? 'active' : ''}`}
+                    onClick={() => setListViewMode('grid')}
+                    title="그리드 보기"
+                >
+                  <FiGrid size={16} />
                 </button>
               </div>
             </div>

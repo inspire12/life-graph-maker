@@ -162,7 +162,11 @@ function EventTimeline({ events = [], onEventClick }) {
                               color: 'white' 
                             }}
                           >
-                            <span className="emotion-score">
+                            <span className="emotion-score"
+                                  style={{
+                                    color: getEmotionColor(event.emotionScore)
+                                  }}
+                            >
                               {event.emotionScore > 0 ? '+' : ''}{event.emotionScore}
                             </span>
                             <span className="emotion-label">{getEmotionLabel(event.emotionScore)}</span>
