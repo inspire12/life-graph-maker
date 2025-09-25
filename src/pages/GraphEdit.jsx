@@ -229,27 +229,23 @@ function GraphEdit() {
             <p>{graph.description}</p>
           </div>
           <div className="header-actions">
-            <div className="btn-group">
-              <button onClick={handleImportClick} className="btn btn-secondary" title="JSON/CSV 파일 가져오기">
-                <FiUpload /> 가져오기
+            <div className="dropdown">
+              <button className="btn btn-secondary dropdown-toggle" title="설정 및 데이터 관리">
+                <FiSettings /> 설정
               </button>
-              <div className="dropdown">
-                <button className="btn btn-secondary dropdown-toggle" title="데이터 내보내기">
-                  <FiDownload /> 내보내기
+              <div className="dropdown-menu">
+                <button onClick={handleImportClick} className="dropdown-item">
+                  <FiUpload /> JSON/CSV 가져오기
                 </button>
-                <div className="dropdown-menu">
-                  <button onClick={handleExportJson} className="dropdown-item">
-                    JSON 형식
-                  </button>
-                  <button onClick={handleExportCsv} className="dropdown-item">
-                    CSV 형식 (Excel)
-                  </button>
-                </div>
+                <div className="dropdown-divider"></div>
+                <button onClick={handleExportJson} className="dropdown-item">
+                  <FiDownload /> JSON 내보내기
+                </button>
+                <button onClick={handleExportCsv} className="dropdown-item">
+                  <FiDownload /> CSV 내보내기
+                </button>
               </div>
             </div>
-            <button className="btn btn-secondary">
-              <FiSettings /> 설정
-            </button>
             <button onClick={handlePresentationMode} className="btn btn-primary">
               <FiPlay /> 발표 모드
             </button>
@@ -425,27 +421,6 @@ function GraphEdit() {
         style={{ display: 'none' }}
       />
 
-      {/* 하단 Import/Export 버튼들 */}
-      <div className="bottom-actions">
-        <div className="action-group">
-          <h3>데이터 관리</h3>
-          <div className="action-buttons">
-            <button onClick={handleImportClick} className="btn btn-outline">
-              <FiUpload /> JSON/CSV 가져오기
-            </button>
-            <button onClick={handleExportJson} className="btn btn-outline">
-              <FiDownload /> JSON 내보내기
-            </button>
-            <button onClick={handleExportCsv} className="btn btn-outline">
-              <FiDownload /> CSV 내보내기
-            </button>
-          </div>
-          <p className="action-description">
-            • JSON: 모든 데이터 포함 (이미지, 메타데이터)<br/>
-            • CSV: 이벤트 기본 정보만 포함 (Excel 호환)
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

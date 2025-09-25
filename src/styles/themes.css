@@ -26,6 +26,22 @@
   backdrop-filter: blur(20px);
 }
 
+.theme-dark .presentation-title h1 {
+  color: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.theme-dark .event-story h2 {
+  color: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .theme-book {
   position: relative;
 }
@@ -47,7 +63,7 @@
 
 .theme-handwritten {
   position: relative;
-  font-family: 'Kalam', 'Comic Sans MS', cursive;
+  font-family: 'Kalam', 'Gaegu', 'Do Hyeon', 'Nanum Pen Script', 'Comic Sans MS', cursive;
 }
 
 .theme-handwritten::before {
@@ -111,12 +127,12 @@
 }
 
 .theme-handwritten .presentation-title h1 {
-  font-family: 'Kalam', 'Comic Sans MS', cursive;
+  font-family: 'Kalam', 'Gaegu', 'Do Hyeon', 'Nanum Pen Script', 'Comic Sans MS', cursive;
   font-weight: 700;
 }
 
 .theme-handwritten .event-story h2 {
-  font-family: 'Kalam', 'Comic Sans MS', cursive;
+  font-family: 'Kalam', 'Gaegu', 'Do Hyeon', 'Nanum Pen Script', 'Comic Sans MS', cursive;
   font-weight: 700;
   transform: rotate(0.2deg);
 }
@@ -162,25 +178,25 @@
 .theme-handwritten .event-date {
   transform: rotate(0.15deg);
   border-radius: 12px 20px 16px 18px;
-  font-family: 'Kalam', 'Comic Sans MS', cursive;
+  font-family: 'Kalam', 'Gaegu', 'Do Hyeon', 'Nanum Pen Script', 'Comic Sans MS', cursive;
 }
 
 .theme-handwritten .keyboard-hints {
   transform: rotate(-0.05deg);
   border-radius: 8px 14px 10px 12px;
-  font-family: 'Kalam', 'Comic Sans MS', cursive;
+  font-family: 'Kalam', 'Gaegu', 'Do Hyeon', 'Nanum Pen Script', 'Comic Sans MS', cursive;
 }
 
 /* Handwritten 테마 텍스트 효과 */
 .theme-handwritten p,
 .theme-handwritten span,
 .theme-handwritten label {
-  font-family: 'Kalam', 'Comic Sans MS', cursive;
+  font-family: 'Kalam', 'Gaegu', 'Do Hyeon', 'Nanum Pen Script', 'Comic Sans MS', cursive;
   font-weight: 400;
 }
 
 .theme-handwritten strong {
-  font-family: 'Kalam', 'Comic Sans MS', cursive;
+  font-family: 'Kalam', 'Gaegu', 'Do Hyeon', 'Nanum Pen Script', 'Comic Sans MS', cursive;
   font-weight: 700;
 }
 
