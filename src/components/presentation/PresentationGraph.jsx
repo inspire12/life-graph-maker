@@ -251,23 +251,6 @@ function PresentationGraph({
           </svg>
         )}
 
-        {/*/!* 현재 테마 정보 표시 *!/*/}
-        {/*<div style={{*/}
-        {/*  position: 'absolute',*/}
-        {/*  top: isFullscreen ? 20 : 10,*/}
-        {/*  left: isFullscreen ? 20 : 10,*/}
-        {/*  zIndex: 1000,*/}
-        {/*  background: 'rgba(0, 0, 0, 0.8)',*/}
-        {/*  color: 'white',*/}
-        {/*  padding: isFullscreen ? '8px 16px' : '6px 12px',*/}
-        {/*  borderRadius: '8px',*/}
-        {/*  fontSize: isFullscreen ? '14px' : '12px',*/}
-        {/*  backdropFilter: 'blur(8px)',*/}
-        {/*  fontWeight: '500',*/}
-        {/*  border: '1px solid rgba(255, 255, 255, 0.2)'*/}
-        {/*}}>*/}
-        {/*  <span style={{ opacity: 0.8 }}>테마:</span> {theme}*/}
-        {/*</div>*/}
 
         {/* 전체화면 토글 버튼 */}
         <button
@@ -287,7 +270,7 @@ function PresentationGraph({
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            fontSize: isFullscreen ? '14px' : '12px',
+            fontSize2: isFullscreen ? '14px' : '12px',
             fontWeight: '500',
             backdropFilter: 'blur(8px)',
             transition: 'all 0.2s ease'
