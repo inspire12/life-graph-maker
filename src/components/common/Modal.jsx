@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { FiX } from 'react-icons/fi';
 
-function Modal({ isOpen, onClose, title, children, className = '' }) {
+function Modal({ isOpen, onClose, title, children, className = '', allowEscapeClose = true }) {
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && allowEscapeClose) {
         onClose();
       }
     };
@@ -18,7 +18,7 @@ function Modal({ isOpen, onClose, title, children, className = '' }) {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, allowEscapeClose]);
 
   if (!isOpen) return null;
 

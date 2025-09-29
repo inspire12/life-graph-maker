@@ -1054,3 +1054,441 @@
 .control-panel-popup::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-disabled);
 }
+
+/* 새로운 프리젠테이션 레이아웃 */
+.graph-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 800px;
+  height: 100vh;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(20px);
+}
+
+/* 푸시 모드일 때 사이드바 스타일 */
+.graph-sidebar.sidebar-push {
+  position: relative;
+  box-shadow: none;
+}
+
+/* 푸시 모드일 때 컨테이너 스타일 */
+.sidebar-push-mode {
+  display: flex;
+  transition: all 0.3s ease;
+}
+
+.sidebar-push-mode .presentation-main-new {
+  flex: 1;
+  margin-left: 0;
+  transition: all 0.3s ease;
+}
+
+.sidebar-push-mode .graph-toggle-btn {
+  left: 820px;
+  transition: left 0.3s ease;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-card);
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.sidebar-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.sidebar-close:hover {
+  background: var(--color-button-secondary-hover);
+  color: var(--color-text-primary);
+}
+
+.sidebar-content {
+  flex: 1;
+  padding: 16px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1999;
+}
+
+/* 오버레이 모드일 때만 블러 효과 적용하되, 사이드바 영역은 제외 */
+.sidebar-overlay.overlay-mode {
+  backdrop-filter: blur(4px);
+  left: 800px; /* 사이드바 너비만큼 왼쪽으로 밀어서 사이드바 영역 제외 */
+  width: calc(100vw - 800px);
+}
+
+/* 푸시 모드일 때는 오버레이 숨김 */
+.sidebar-overlay.push-mode {
+  display: none;
+}
+
+.graph-toggle-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: var(--shadow-hover);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.graph-toggle-btn:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.graph-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.presentation-main-new {
+  min-height: 100vh;
+  padding: 80px 40px 40px 40px;
+  background: var(--color-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content-wrapper {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.event-header {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.event-title-container {
+  display: flex;
+  align-items: center;
+  /*justify-content: center;*/
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.event-header .event-date {
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 20px;
+  background: var(--color-surface);
+  border-radius: 25px;
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-default);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.event-header .event-title {
+  color: var(--color-text-primary);
+  font-size: 42px;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.2;
+  background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  flex: 1;
+  min-width: 0;
+}
+
+.main-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: start;
+  min-height: 500px;
+  transition: all 0.5s ease;
+}
+
+
+.image-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.main-event-image {
+  max-width: 100%;
+  max-height: 600px;
+  border-radius: 20px;
+  box-shadow: var(--shadow-hover);
+  object-fit: contain;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 3px solid var(--color-border);
+}
+
+.main-event-image:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+.placeholder-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  background: var(--color-surface);
+  border: 2px dashed var(--color-border);
+  border-radius: 20px;
+  color: var(--color-text-secondary);
+}
+
+.placeholder-image span {
+  font-size: 60px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.placeholder-image p {
+  font-size: 18px;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.text-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+}
+
+.event-description {
+  background: var(--color-card);
+  padding: 40px;
+  border-radius: 20px;
+  margin-bottom: 30px;
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-default);
+  border: 1px solid var(--color-border);
+  position: relative;
+  min-height: auto;
+  max-height: 60vh;
+  transition: all 0.3s ease;
+}
+
+.event-description::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+}
+
+.event-description p {
+  color: var(--color-text-primary);
+  font-size: 20px;
+  line-height: 1.7;
+  margin: 0;
+  font-weight: 400;
+}
+
+.placeholder-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  background: var(--color-surface);
+  border: 2px dashed var(--color-border);
+  border-radius: 20px;
+  color: var(--color-text-secondary);
+  margin-bottom: 30px;
+}
+
+.placeholder-text p {
+  font-size: 18px;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.event-meta {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  padding: 12px 24px;
+  background: var(--color-surface);
+  border-radius: 25px;
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-default);
+  border: 1px solid var(--color-border);
+  transition: all 0.3s ease;
+}
+
+.meta-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.meta-item .emotion-value.positive {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.meta-item .emotion-value.negative {
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.meta-item .stars {
+  color: var(--color-secondary);
+  font-size: 18px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.meta-item .category {
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+  .graph-sidebar {
+    width: 650px;
+  }
+  
+  .sidebar-push-mode .graph-toggle-btn {
+    left: 670px;
+  }
+  
+  .sidebar-overlay.overlay-mode {
+    left: 650px;
+    width: calc(100vw - 650px);
+  }
+  
+  .main-content-grid {
+    gap: 40px;
+  }
+  
+  .event-header .event-title {
+    font-size: 36px;
+  }
+  
+  .event-description {
+    padding: 30px;
+    max-height: 50vh;
+  }
+}
+
+@media (max-width: 992px) {
+  .graph-sidebar {
+    width: 550px;
+  }
+  
+  .sidebar-push-mode .graph-toggle-btn {
+    left: 570px;
+  }
+  
+  .sidebar-overlay.overlay-mode {
+    left: 550px;
+    width: calc(100vw - 550px);
+  }
+  
+  .event-description p {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .graph-sidebar {
+    width: 100vw;
+  }
+  
+  .sidebar-content {
+    padding: 12px 16px;
+  }
+  
+  .presentation-main-new {
+    padding: 60px 20px 20px 20px;
+  }
+  
+  .main-content-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  
+  .event-header .event-title {
+    font-size: 28px;
+  }
+  
+  .event-description {
+    padding: 24px;
+    max-height: 45vh;
+  }
+  
+  .event-description p {
+    font-size: 16px;
+  }
+  
+  .meta-item {
+    padding: 8px 16px;
+  }
+  
+  .graph-toggle-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+  }
+}

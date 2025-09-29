@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FiCalendar, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 function DatePicker({ 
@@ -13,18 +13,33 @@ function DatePicker({
   const [selectedDate, setSelectedDate] = useState(value ? new Date(value) : null);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const debounceTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (value && !isTyping) {
       const date = new Date(value);
       setSelectedDate(date);
       setDisplayDate(date);
-      setInputValue(formatDisplayValue(date));
+      // 초기값이 YYYY-MM-DD 형식이면 그대로 유지, 아니면 포맷팅
+      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        setInputValue(value); // YYYY-MM-DD 형식 그대로 유지
+      } else {
+        setInputValue(formatDisplayValue(date, true)); // 간결한 형식 사용
+      }
     } else if (!value && !isTyping) {
       setInputValue('');
       setSelectedDate(null);
     }
   }, [value, isTyping]);
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // 현재 월의 첫 번째 날과 마지막 날
   const firstDayOfMonth = new Date(displayDate.getFullYear(), displayDate.getMonth(), 1);
@@ -71,11 +86,17 @@ function DatePicker({
     setDisplayDate(new Date(displayDate.getFullYear() + direction, displayDate.getMonth(), 1));
   };
 
-  const formatDisplayValue = (date = selectedDate) => {
+  const formatDisplayValue = (date = selectedDate, useShortFormat = false) => {
     if (!date) return '';
+    
+    if (useShortFormat) {
+      // 간결한 형식 (YYYY-MM-DD)
+      return date.toISOString().split('T')[0];
+    }
+    
     return date.toLocaleDateString('ko-KR', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric'
     });
   };
@@ -86,20 +107,37 @@ function DatePicker({
     setInputValue(input);
     setIsTyping(true);
 
-    // 입력이 비어있으면 null로 설정
+    // 기존 디바운스 타이머 클리어
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // 입력이 비어있으면 즉시 null로 설정
     if (!input.trim()) {
       setSelectedDate(null);
       onChange('');
       return;
     }
 
-    // 다양한 날짜 형식을 파싱
+    // 즉시 파싱 시도 (유효한 날짜라면 바로 적용)
     const parsedDate = parseInputDate(input);
     if (parsedDate && !isNaN(parsedDate.getTime())) {
       setSelectedDate(parsedDate);
       setDisplayDate(parsedDate);
       const dateString = parsedDate.toISOString().split('T')[0];
       onChange(dateString);
+    } else {
+      // 파싱에 실패하면 디바운스 후 재시도
+      debounceTimeoutRef.current = setTimeout(() => {
+        const finalParsedDate = parseInputDate(input);
+        if (finalParsedDate && !isNaN(finalParsedDate.getTime())) {
+          setSelectedDate(finalParsedDate);
+          setDisplayDate(finalParsedDate);
+          const dateString = finalParsedDate.toISOString().split('T')[0];
+          onChange(dateString);
+          setInputValue(formatDisplayValue(finalParsedDate, true));
+        }
+      }, 800); // 800ms 후 재시도
     }
   };
 
@@ -119,12 +157,17 @@ function DatePicker({
       /^(\d{4})(\d{2})(\d{2})$/,
       // MM-DD, MM/DD (현재 년도로 가정)
       /^(\d{1,2})[-\/.](\d{1,2})$/,
-      // DD-MM-YYYY, DD/MM/YYYY (유럽식, 일이 먼저)
-      /^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/,
+      // DD-MM-YYYY, DD/MM/YYYY (유럽식, 일이 먼저) - 제거하고 대신 아래 추가
       // YYYY (년도만, 1월 1일로 설정)
       /^(\d{4})$/,
       // MM (월만, 현재 년도 1일로 설정)
-      /^(\d{1,2})$/
+      /^(\d{1,2})$/,
+      // YYYY-MM (년-월, 해당 월 1일로 설정)
+      /^(\d{4})[-\/.](\d{1,2})$/,
+      // 한국식 날짜 입력 (예: 2024년 1월 15일, 1월 15일, 15일)
+      /^(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일?$/,
+      /^(\d{1,2})월\s*(\d{1,2})일?$/,
+      /^(\d{1,2})일$/
     ];
 
     for (let i = 0; i < formats.length; i++) {
@@ -139,7 +182,7 @@ function DatePicker({
             month = parseInt(match[2]) - 1; // 0-based month
             day = parseInt(match[3]);
             break;
-          case 1: // MM-DD-YYYY 형식 (첫 번째)
+          case 1: // MM-DD-YYYY 형식
             month = parseInt(match[1]) - 1;
             day = parseInt(match[2]);
             year = parseInt(match[3]);
@@ -149,20 +192,35 @@ function DatePicker({
             day = parseInt(match[2]);
             year = currentYear;
             break;
-          case 4: // DD-MM-YYYY 형식 (유럽식)
-            day = parseInt(match[1]);
-            month = parseInt(match[2]) - 1;
-            year = parseInt(match[3]);
-            break;
-          case 5: // YYYY (년도만)
+          case 4: // YYYY (년도만)
             year = parseInt(match[1]);
             month = 0; // 1월
             day = 1;
             break;
-          case 6: // MM (월만)
+          case 5: // MM (월만)
             year = currentYear;
             month = parseInt(match[1]) - 1;
             day = 1;
+            break;
+          case 6: // YYYY-MM (년-월)
+            year = parseInt(match[1]);
+            month = parseInt(match[2]) - 1;
+            day = 1;
+            break;
+          case 7: // YYYY년 MM월 DD일
+            year = parseInt(match[1]);
+            month = parseInt(match[2]) - 1;
+            day = parseInt(match[3]);
+            break;
+          case 8: // MM월 DD일 (현재 년도)
+            year = currentYear;
+            month = parseInt(match[1]) - 1;
+            day = parseInt(match[2]);
+            break;
+          case 9: // DD일 (현재 년도, 월)
+            year = currentYear;
+            month = new Date().getMonth(); // 현재 월
+            day = parseInt(match[1]);
             break;
         }
 
@@ -246,7 +304,12 @@ function DatePicker({
       e.preventDefault();
       const parsedDate = parseInputDate(inputValue);
       if (parsedDate) {
-        handleDateClick(parsedDate);
+        setSelectedDate(parsedDate);
+        setDisplayDate(parsedDate);
+        const dateString = parsedDate.toISOString().split('T')[0];
+        onChange(dateString);
+        // 엔터 시에는 간결한 YYYY-MM-DD 형식으로 표시
+        setInputValue(formatDisplayValue(parsedDate, true));
       }
       setIsOpen(false);
       setIsTyping(false);
@@ -264,6 +327,17 @@ function DatePicker({
     // 약간의 지연을 두어 달력 클릭이 처리되도록 함
     setTimeout(() => {
       setIsTyping(false);
+      // 블러 시에도 입력된 값이 유효하면 최종 적용
+      if (inputValue.trim()) {
+        const parsedDate = parseInputDate(inputValue);
+        if (parsedDate && !isNaN(parsedDate.getTime())) {
+          setSelectedDate(parsedDate);
+          setDisplayDate(parsedDate);
+          const dateString = parsedDate.toISOString().split('T')[0];
+          onChange(dateString);
+          setInputValue(formatDisplayValue(parsedDate, true));
+        }
+      }
     }, 200);
   };
 

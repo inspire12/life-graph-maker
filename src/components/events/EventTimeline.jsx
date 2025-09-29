@@ -6,11 +6,11 @@ import { getEmotionColor } from '../../utils/colorHelpers';
 function EventTimeline({ events = [], onEventClick }) {
   const [selectedYear, setSelectedYear] = useState(null);
   
-  // 이벤트를 날짜 순으로 정렬
+  // 이벤트를 날짜 내림차순으로 정렬 (최신순)
   const sortedEvents = [...events].sort((a, b) => {
     const dateA = new Date(a.date);
     const dateB = new Date(b.date);
-    return dateA - dateB;
+    return dateB - dateA;
   });
 
   // 연도별로 이벤트 그룹화

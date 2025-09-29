@@ -401,6 +401,7 @@ function GraphEdit() {
         onClose={handleCloseModal}
         title={editingEvent ? '이벤트 편집' : '새 이벤트 추가'}
         className="event-modal"
+        allowEscapeClose={false}
       >
         <EventForm
           event={editingEvent}

@@ -2,10 +2,10 @@
 export const GRAPH_THEMES = {
   modern: {
     id: 'modern',
-    name: '모던',
+    name: '기본',
     description: '깔끔한 디지털 스타일',
     styles: {
-      background: '#f5f5f5',
+      background: '#ffffff',
       gridColor: '#e0e0e0',
       gridPattern: '3 3',
       axisColor: '#666',
@@ -26,35 +26,6 @@ export const GRAPH_THEMES = {
     }
   },
   
-  analog: {
-    id: 'analog',
-    name: '아날로그',
-    description: '종이 위에 그려진 듯한 클래식한 느낌',
-    styles: {
-      background: '#faf9f7',
-      gridColor: '#d4c5b3',
-      gridPattern: '2 2',
-      axisColor: '#8b7355',
-      lineColor: '#2c5aa0',
-      lineWidth: 3,
-      lineDashArray: null,
-      dotStroke: '#2c5aa0',
-      dotStrokeWidth: 3,
-      fontSize: 13,
-      fontFamily: '"Times New Roman", Times, serif',
-      referenceLineColor: '#a0956b',
-      referenceLineDashArray: '5 3',
-      positiveReferenceColor: '#3d5a3d',
-      negativeReferenceColor: '#8b3a3a',
-      tooltipBackground: 'rgba(248, 245, 240, 0.95)',
-      tooltipBorder: '2px solid #c4a57b',
-      tooltipShadow: '0 3px 10px rgba(139, 115, 85, 0.3)',
-      // 아날로그 특유의 효과
-      paperTexture: true,
-      inkBleed: true
-    }
-  },
-  
   handwritten: {
     id: 'handwritten',
     name: '손글씨',
@@ -70,7 +41,7 @@ export const GRAPH_THEMES = {
       dotStroke: '#4a5568',
       dotStrokeWidth: 2,
       fontSize: 12,
-      fontFamily: '"Kalam", "Comic Sans MS", cursive',
+      fontFamily: '"Kalam", "Gaegu", "Do Hyeon", "Nanum Pen Script", "Comic Sans MS", cursive',
       referenceLineColor: '#a0aec0',
       referenceLineDashArray: '3 5',
       positiveReferenceColor: '#48bb78',
@@ -82,66 +53,6 @@ export const GRAPH_THEMES = {
       roughPath: true,
       sketchyLines: true,
       handdrawnDots: true
-    }
-  },
-  
-  notebook: {
-    id: 'notebook',
-    name: '노트북',
-    description: '노트북/다이어리 스타일',
-    styles: {
-      background: '#ffffff',
-      gridColor: '#c5d9f1',
-      gridPattern: '1 1',
-      axisColor: '#2d3748',
-      lineColor: '#1a365d',
-      lineWidth: 2,
-      lineDashArray: null,
-      dotStroke: '#1a365d',
-      dotStrokeWidth: 2,
-      fontSize: 11,
-      fontFamily: '"Courier New", Courier, monospace',
-      referenceLineColor: '#718096',
-      referenceLineDashArray: '2 4',
-      positiveReferenceColor: '#2b6cb0',
-      negativeReferenceColor: '#c53030',
-      tooltipBackground: 'rgba(255, 255, 255, 0.98)',
-      tooltipBorder: '1px solid #c5d9f1',
-      tooltipShadow: '0 2px 6px rgba(29, 54, 93, 0.15)',
-      // 노트북 특유의 효과
-      ruledLines: true,
-      marginLine: true,
-      holesPunched: false
-    }
-  },
-  
-  minimal: {
-    id: 'minimal',
-    name: '미니멀',
-    description: '최소한의 요소만 표시',
-    styles: {
-      background: '#ffffff',
-      gridColor: 'transparent',
-      gridPattern: null,
-      axisColor: '#9ca3af',
-      lineColor: '#374151',
-      lineWidth: 2,
-      lineDashArray: null,
-      dotStroke: '#ffffff',
-      dotStrokeWidth: 3,
-      fontSize: 11,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      referenceLineColor: '#e5e7eb',
-      referenceLineDashArray: '1 2',
-      positiveReferenceColor: '#10b981',
-      negativeReferenceColor: '#ef4444',
-      tooltipBackground: 'rgba(255, 255, 255, 0.98)',
-      tooltipBorder: '1px solid #e5e7eb',
-      tooltipShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      // 미니멀 특유의 효과
-      hideGrid: true,
-      cleanAxes: true,
-      subtleColors: true
     }
   }
 };
@@ -361,14 +272,8 @@ export const getPresentationBackground = (theme) => {
   switch (theme) {
     case 'modern':
       return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-    case 'analog':
-      return 'linear-gradient(135deg, #8B7355 0%, #D4C5B3 100%)';
     case 'handwritten':
       return 'linear-gradient(135deg, #4A5568 0%, #E8E8E8 100%)';
-    case 'notebook':
-      return 'linear-gradient(135deg, #2D3748 0%, #C5D9F1 100%)';
-    case 'minimal':
-      return 'linear-gradient(135deg, #F9FAFB 0%, #E5E7EB 100%)';
     default:
       return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
   }

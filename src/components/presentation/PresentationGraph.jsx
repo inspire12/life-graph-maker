@@ -298,7 +298,16 @@ function PresentationGraph({
         </button>
 
         {/* 배경 그래프 (전체 경로 - 흐릿하게) */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.3 }}>
+        <div style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          opacity: 0.3,
+          background: themeStyles.container.background,
+          borderRadius: themeStyles.container.borderRadius
+        }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={clusteredData}
@@ -322,19 +331,23 @@ function PresentationGraph({
                 domain={xDomain}
                 ticks={viewMode === 'timeline' ? xTicks : undefined}
                 tickFormatter={formatXTick}
-                stroke="rgba(255,255,255,0.6)"
+                stroke="rgba(102, 102, 102, 0.3)"
                 fontSize={isFullscreen ? themeStyles.xAxis.fontSize * 1.4 : themeStyles.xAxis.fontSize}
                 fontFamily={themeStyles.xAxis.fontFamily}
                 height={isFullscreen ? 50 : 30}
+                axisLine={{ stroke: 'rgba(102, 102, 102, 0.3)', strokeWidth: 1 }}
+                tickLine={{ stroke: 'rgba(102, 102, 102, 0.3)', strokeWidth: 1 }}
               />
               
               <YAxis
                 domain={yDomain}
                 tickFormatter={formatYTick}
-                stroke="rgba(255,255,255,0.6)"
+                stroke="rgba(102, 102, 102, 0.3)"
                 fontSize={isFullscreen ? themeStyles.yAxis.fontSize * 1.4 : themeStyles.yAxis.fontSize}
                 fontFamily={themeStyles.yAxis.fontFamily}
                 width={isFullscreen ? 80 : 50}
+                axisLine={{ stroke: 'rgba(102, 102, 102, 0.3)', strokeWidth: 1 }}
+                tickLine={{ stroke: 'rgba(102, 102, 102, 0.3)', strokeWidth: 1 }}
               />
               
               {/* 0선 참조선 */}
@@ -378,7 +391,16 @@ function PresentationGraph({
 
         {/* 진행된 라인 (현재 이벤트까지) */}
         {visibleDataPoints.length > 0 && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
+          <div style={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            pointerEvents: 'none',
+            background: themeStyles.container.background,
+            borderRadius: themeStyles.container.borderRadius
+          }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={visibleDataPoints}
@@ -394,10 +416,26 @@ function PresentationGraph({
                   type={viewMode === 'timeline' ? 'number' : 'number'}
                   dataKey={viewMode === 'timeline' ? 'timestamp' : 'order'}
                   domain={xDomain}
-                  hide
+                  ticks={viewMode === 'timeline' ? xTicks : undefined}
+                  tickFormatter={formatXTick}
+                  stroke={themeStyles.xAxis.stroke}
+                  fontSize={isFullscreen ? themeStyles.xAxis.fontSize * 1.4 : themeStyles.xAxis.fontSize}
+                  fontFamily={themeStyles.xAxis.fontFamily}
+                  height={isFullscreen ? 50 : 30}
+                  axisLine={themeStyles.xAxis.axisLine}
+                  tickLine={themeStyles.xAxis.tickLine}
                 />
                 
-                <YAxis domain={yDomain} hide />
+                <YAxis 
+                  domain={yDomain}
+                  tickFormatter={formatYTick}
+                  stroke={themeStyles.yAxis.stroke}
+                  fontSize={isFullscreen ? themeStyles.yAxis.fontSize * 1.4 : themeStyles.yAxis.fontSize}
+                  fontFamily={themeStyles.yAxis.fontFamily}
+                  width={isFullscreen ? 80 : 50}
+                  axisLine={themeStyles.yAxis.axisLine}
+                  tickLine={themeStyles.yAxis.tickLine}
+                />
                 
                 {/* 진행된 라인 */}
                 <Line

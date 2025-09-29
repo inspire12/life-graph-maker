@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiX, FiChevronLeft, FiChevronRight, FiPlay, FiPause, FiSettings, FiEyeOff, FiEye, FiMonitor, FiSmartphone } from 'react-icons/fi';
+import { FiX, FiChevronLeft, FiChevronRight, FiPlay, FiPause, FiSettings, FiEyeOff, FiEye, FiMonitor, FiSmartphone, FiShare2 } from 'react-icons/fi';
 import { AnimatePresence, motion } from 'framer-motion';
 import ThemeSelector from '../common/ThemeSelector';
 import GlobalThemeSelector from '../common/GlobalThemeSelector';
@@ -22,6 +22,8 @@ function ControlPanel({
   // 레이아웃 관련
   layoutMode,
   setLayoutMode,
+  sidebarMode,
+  setSidebarMode,
   controlsVisible,
   toggleControls,
   
@@ -34,6 +36,24 @@ function ControlPanel({
 
   const togglePanel = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleShareCurrentPosition = async () => {
+    try {
+      const currentUrl = new URL(window.location.href);
+      if (currentEventIndex > 0) {
+        currentUrl.searchParams.set('start', (currentEventIndex + 1).toString());
+      } else {
+        currentUrl.searchParams.delete('start');
+        currentUrl.searchParams.delete('eventId');
+      }
+      
+      await navigator.clipboard.writeText(currentUrl.toString());
+      alert(`현재 위치 URL이 클립보드에 복사되었습니다!\n이벤트 ${currentEventIndex + 1}/${totalEvents}에서 시작`);
+    } catch (error) {
+      console.error('클립보드 복사 실패:', error);
+      alert('URL 복사에 실패했습니다.');
+    }
   };
 
   // 팝업이 열려 있을 때도 키보드 이벤트 처리
@@ -69,6 +89,11 @@ function ControlPanel({
           e.preventDefault();
           toggleAutoPlay();
           break;
+        case 'm':
+        case 'M':
+          e.preventDefault();
+          setSidebarMode(prev => prev === 'overlay' ? 'push' : 'overlay');
+          break;
         case 'l':
         case 'L':
           e.preventDefault();
@@ -80,26 +105,14 @@ function ControlPanel({
           break;
         case '2':
           e.preventDefault();
-          setCurrentTheme('analog');
-          break;
-        case '3':
-          e.preventDefault();
           setCurrentTheme('handwritten');
-          break;
-        case '4':
-          e.preventDefault();
-          setCurrentTheme('notebook');
-          break;
-        case '5':
-          e.preventDefault();
-          setCurrentTheme('minimal');
           break;
       }
     };
 
     document.addEventListener('keydown', handleKeyDown, true); // capture 단계에서 처리
     return () => document.removeEventListener('keydown', handleKeyDown, true);
-  }, [isOpen, handlePrevious, handleNext, toggleAutoPlay, setLayoutMode, setCurrentTheme]);
+  }, [isOpen, handlePrevious, handleNext, toggleAutoPlay, setLayoutMode, setCurrentTheme, setSidebarMode]);
 
   return (
     <>
@@ -411,6 +424,24 @@ function ControlPanel({
                     {layoutMode === 'horizontal' ? '세로 모드로 전환' : '가로 모드로 전환'}
                   </button>
                   
+                  <button 
+                    onClick={() => setSidebarMode(prev => prev === 'overlay' ? 'push' : 'overlay')} 
+                    className="btn btn-secondary"
+                    style={{ justifyContent: 'flex-start' }}
+                  >
+                    <FiMonitor />
+                    사이드바: {sidebarMode === 'overlay' ? '오버레이' : '푸시'} 모드
+                  </button>
+                  
+                  <button 
+                    onClick={handleShareCurrentPosition}
+                    className="btn btn-secondary"
+                    style={{ justifyContent: 'flex-start' }}
+                  >
+                    <FiShare2 />
+                    현재 위치 공유
+                  </button>
+                  
                   <button onClick={handleExit} className="btn btn-secondary" style={{ justifyContent: 'flex-start' }}>
                     <FiX /> 프리젠테이션 종료
                   </button>
@@ -429,7 +460,8 @@ function ControlPanel({
               }}>
                 <strong style={{ color: 'var(--color-text-secondary)' }}>키보드 단축키:</strong><br/>
                 ← 이전 | → 다음 | Space 다음 | P 자동진행<br/>
-                L 레이아웃전환 | 1-5 테마변경 | ESC 종료
+                G 그래프토글 | M 사이드바모드 | L 레이아웃전환<br/>
+                1-2 테마변경 | H 컨트롤숨김 | ESC 종료
                 {isAutoPlay && (
                   <div style={{ color: 'var(--color-primary)', fontWeight: 'bold', marginTop: '4px' }}>
                     🔄 자동 진행 중
