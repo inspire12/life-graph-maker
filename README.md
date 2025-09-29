@@ -29,11 +29,16 @@
 - **중요도 표시**: 점 크기로 이벤트 중요도 시각화
 - **전체화면/줌 기능**: 상세한 그래프 분석을 위한 확대 기능
 
-### 🎭 프리젠테이션 모드
+### 🎭 프리젠테이션 모드 v1.0.0
+- **인터랙티브 레이아웃**: 이미지(좌)/텍스트(우) 분할 화면
+- **스마트 페이지네이션**: 긴 설명을 자동 분할하고 overflow 방지
+- **동적 높이 조정**: 텍스트 길이에 따른 컨테이너 자동 확장
+- **포커스 기반 네비게이션**: 설명 영역 포커스 시 독립적 키보드 컨트롤
+- **1-based URL 파라미터**: 사용자 친화적 공유 URL (start=1부터)
+- **사이드바 그래프**: 토글 가능한 미니 그래프 (오버레이/푸시 모드)
+- **향상된 플레이스홀더**: 이미지 없는 이벤트용 스타일리시한 대체 UI
 - **자동 재생**: 이벤트를 시간 순서대로 자동 진행
-- **인터랙티브 애니메이션**: 그래프와 이벤트 카드의 동기화된 애니메이션
-- **수동 제어**: 이전/다음 이벤트로 자유로운 탐색
-- **진행률 표시**: 현재 진행 상황 시각화
+- **플로팅 컨트롤 패널**: 설정 및 네비게이션을 위한 현대적 UI
 
 ### 📱 사용자 친화적 인터페이스
 - **직관적인 날짜 입력**: 키보드 입력 및 달력 선택 지원
@@ -95,7 +100,62 @@ npm run preview
 
 # 코드 린팅
 npm run lint
+
+# 자동 배포 스크립트 (추천)
+./deploy.sh
+
+# 빌드만 실행
+./deploy.sh --build
+
+# 미리보기만 실행  
+./deploy.sh --preview
 ```
+
+### 🌐 배포 옵션
+
+본 프로젝트는 다양한 PaaS 플랫폼에 쉽게 배포할 수 있습니다:
+
+#### 1. Vercel (추천)
+```bash
+# Vercel CLI 설치
+npm install -g vercel
+
+# 배포
+./deploy.sh
+# 또는 수동으로
+vercel --prod
+```
+
+#### 2. Netlify
+```bash
+# Netlify CLI 설치
+npm install -g netlify-cli
+
+# 배포
+./deploy.sh
+# 또는 수동으로
+npm run build
+netlify deploy --prod --dir=dist
+```
+
+#### 3. GitHub Pages
+```bash
+# gh-pages 패키지 설치
+npm install --save-dev gh-pages
+
+# 배포
+./deploy.sh
+# 또는 수동으로
+npm run build
+npx gh-pages -d dist
+```
+
+#### 4. 기타 호스팅 서비스
+빌드된 `dist/` 폴더를 다음 서비스에 업로드:
+- Firebase Hosting
+- AWS S3 + CloudFront
+- Azure Static Web Apps
+- DigitalOcean App Platform
 
 ## 📁 프로젝트 구조
 
