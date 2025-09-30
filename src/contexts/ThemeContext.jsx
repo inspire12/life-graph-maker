@@ -116,7 +116,7 @@ export const GLOBAL_THEMES = {
 export function ThemeProvider({ children }) {
   const [currentTheme, setCurrentTheme] = useState(() => {
     const saved = localStorage.getItem('app-theme');
-    return saved || 'light';
+    return saved || 'book';
   });
 
   const [controlsVisible, setControlsVisible] = useState(true);
