@@ -84,7 +84,7 @@ function RoughGraph({
   };
 
   // Rough 라인 그리기 (감정에 따른 색상 변화)
-  const drawRoughLine = (points, emotionScores, roughness = 1.8) => {
+  const drawRoughLine = (points, emotionScores, roughness = 1.8, animateLastSegment = false) => {
     if (!roughSvg || points.length < 2) return [];
 
     const elements = [];
@@ -94,18 +94,22 @@ function RoughGraph({
       const startPoint = points[i];
       const endPoint = points[i + 1];
       const avgEmotion = (emotionScores[i] + emotionScores[i + 1]) / 2;
+      const isLastSegment = i === points.length - 2;
       
       const pathData = `M ${startPoint.x} ${startPoint.y} L ${endPoint.x} ${endPoint.y}`;
       
       const element = roughSvg.path(pathData, {
         stroke: getEmotionColor(avgEmotion),
-        strokeWidth: 4,
+        strokeWidth: isLastSegment && animateLastSegment ? 5 : 4,
         roughness: roughness,
         bowing: 3,
         fill: 'none'
       });
       
-      elements.push(element);
+      elements.push({
+        element,
+        isLastSegment: isLastSegment && animateLastSegment
+      });
     }
     
     return elements;
@@ -362,10 +366,14 @@ function RoughGraph({
               
               {/* 라인들 (감정별 색상) */}
               {linePoints.length > 1 && 
-                drawRoughLine(linePoints, emotionScores, 1.8).map((element, index) => (
+                drawRoughLine(linePoints, emotionScores, 1.8, true).map((item, index) => (
                   <g 
                     key={`line-${index}`}
-                    dangerouslySetInnerHTML={{ __html: element.innerHTML }} 
+                    dangerouslySetInnerHTML={{ __html: item.element.innerHTML }}
+                    style={{
+                      opacity: item.isLastSegment ? 0.8 : 1,
+                      filter: item.isLastSegment ? 'drop-shadow(0 0 4px rgba(0,0,0,0.3))' : 'none'
+                    }}
                   />
                 ))
               }

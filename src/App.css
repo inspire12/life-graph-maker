@@ -236,7 +236,6 @@ body {
 .timeline-event {
   position: relative;
   margin-bottom: 1.5rem;
-  cursor: pointer;
   transition: transform 0.2s ease;
 }
 
@@ -246,7 +245,7 @@ body {
 
 .timeline-dot {
   position: absolute;
-  left: -1.9rem;
+  left: -1.7rem;
   top: 0.75rem;
   width: 16px;
   height: 16px;
@@ -281,6 +280,13 @@ body {
   margin-bottom: 0.75rem;
 }
 
+.event-header:last-child {
+
+  margin-bottom: 0.75rem;
+}
+.event-title-section{
+  width: 80%;
+}
 .event-title-section h5 {
   margin: 0 0 0.25rem 0;
   font-size: 1.1rem;
@@ -767,6 +773,7 @@ body {
 
 .app-container {
   min-height: 100vh;
+  width: 100vw;
   display: flex;
   flex-direction: column;
 }
@@ -988,7 +995,7 @@ body {
 }
 
 .form-group {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .form-group label {
@@ -1058,6 +1065,7 @@ body {
   border-radius: 0.75rem;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: calc(500px + 120px);
 }
 
 .graph-empty {
@@ -1223,6 +1231,7 @@ body {
   font-size: 1.1rem;
   font-weight: 600;
   line-height: 1.3;
+  width: 80%;
 }
 
 .event-category {
@@ -1367,9 +1376,75 @@ body {
 
 .event-header {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
+}
+
+/* 프리젠테이션 헤더 레이아웃 */
+.presentation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 1rem;
+}
+
+.event-content-center {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.event-progress-info {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  margin-top: 0.25rem;
+}
+
+.event-counter {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #666;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* 프리젠테이션 메타 레이아웃 */
+.presentation-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
+}
+
+.meta-center-group {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+
+.category-item {
+  flex-shrink: 0;
+}
+
+.category-item .category {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
 }
 
 .event-header h4 {
@@ -1397,6 +1472,143 @@ body {
   display: flex;
   flex-direction: column;
   z-index: 1000;
+}
+
+/* 프리젠테이션 사이드바 */
+.graph-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: rgba(20, 20, 20, 0.95);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-overlay {
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+}
+
+.sidebar-push {
+  position: relative;
+  box-shadow: none;
+}
+
+.sidebar-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.sidebar-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.sidebar-close:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+}
+
+/* 프리젠테이션 사이드바 패널 */
+.presentation-sidebar-panel {
+  background: transparent !important;
+  box-shadow: none !important;
+  height: 100vh;
+  border-radius: 0 !important;
+}
+
+.presentation-sidebar-panel .resizable-panel-content {
+  padding: 0;
+  background: transparent;
+}
+
+/* 오버레이 모드 */
+.overlay-mode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  /*background: rgba(0, 0, 0, 0.5);*/
+  z-index: 1000;
+}
+
+.push-mode {
+  display: none;
+}
+
+/* 그래프 토글 버튼 */
+.graph-toggle-btn {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1002;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  cursor: pointer;
+  font-size: 1.5rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+.graph-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+/* 사이드바 리사이즈 핸들 */
+.sidebar-resize-handle:hover .resize-indicator {
+  opacity: 1 !important;
+}
+
+.sidebar-resize-handle:active {
+  background-color: rgba(33, 150, 243, 0.6) !important;
+}
+
+.sidebar-resize-handle:active .resize-indicator {
+  opacity: 1 !important;
+  background-color: rgba(33, 150, 243, 0.9) !important;
+}
+
+/* 리사이징 중 오버레이 */
+.presentation-container.resizing::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  cursor: col-resize;
+  background: rgba(0, 0, 0, 0.01);
 }
 
 .presentation-header {
@@ -2316,7 +2528,7 @@ body {
 .event-form {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.45rem;
 }
 
 .form-row {

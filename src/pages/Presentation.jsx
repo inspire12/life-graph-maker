@@ -7,7 +7,7 @@ import { eventService } from '../services/eventService';
 import PresentationGraph from '../components/presentation/PresentationGraph';
 import ControlPanel from '../components/presentation/ControlPanel';
 import EnhancedPlaceholder from '../components/presentation/EnhancedPlaceholder';
-import SmartPaginatedText from '../components/presentation/SmartPaginatedText';
+import DynamicPaginatedText from '../components/presentation/DynamicPaginatedText.jsx';
 
 function Presentation() {
   const { id } = useParams();
@@ -37,6 +37,15 @@ function Presentation() {
   const [layoutMode, setLayoutMode] = useState('vertical'); // 'horizontal' | 'vertical'
   const [sidebarOpen, setSidebarOpen] = useState(false); // 그래프 사이드바 토글
   const [sidebarMode, setSidebarMode] = useState('overlay'); // 'overlay' | 'push'
+  
+  // 사이드바 리사이즈 관련 상태
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem('presentation-sidebar-width');
+    return saved ? parseInt(saved, 10) : 500;
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeStartX, setResizeStartX] = useState(0);
+  const [resizeStartWidth, setResizeStartWidth] = useState(0);
 
   // 전역 테마 변경 시 그래프 테마도 자동 업데이트
   useEffect(() => {
@@ -181,6 +190,50 @@ function Presentation() {
     setSidebarOpen(!sidebarOpen);
   };
 
+  // 사이드바 리사이즈 핸들러
+  const handleResizeStart = useCallback((e) => {
+    e.preventDefault();
+    setIsResizing(true);
+    setResizeStartX(e.clientX);
+    setResizeStartWidth(sidebarWidth);
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+  }, [sidebarWidth]);
+
+  const handleResizeMove = useCallback((e) => {
+    if (!isResizing) return;
+    
+    const deltaX = e.clientX - resizeStartX;
+    const newWidth = Math.max(350, Math.min(800, resizeStartWidth + deltaX));
+    setSidebarWidth(newWidth);
+  }, [isResizing, resizeStartX, resizeStartWidth]);
+
+  const handleResizeEnd = useCallback(() => {
+    setIsResizing(false);
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+    localStorage.setItem('presentation-sidebar-width', sidebarWidth.toString());
+  }, [sidebarWidth]);
+
+  // 리사이즈 이벤트 리스너
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+      };
+    }
+  }, [isResizing, handleResizeMove, handleResizeEnd]);
+
+  // 더블클릭으로 기본 너비로 리셋
+  const handleResizeDoubleClick = () => {
+    setSidebarWidth(500);
+    localStorage.setItem('presentation-sidebar-width', '500');
+  };
+
   const handleKeyPress = useCallback((e) => {
     switch (e.key) {
       case 'Escape':
@@ -267,6 +320,7 @@ function Presentation() {
         {sidebarOpen && (
           <motion.div 
             className={`graph-sidebar ${sidebarMode === 'push' ? 'sidebar-push' : 'sidebar-overlay'}`}
+            style={{ width: `${sidebarWidth}px` }}
             initial={{ x: -800 }}
             animate={{ x: 0 }}
             exit={{ x: -800 }}
@@ -285,6 +339,51 @@ function Presentation() {
                 viewMode="timeline"
                 height={500}
                 theme="modern"
+                showLegend={true}
+              />
+            </div>
+            
+            {/* 리사이즈 핸들 */}
+            <div
+              className="sidebar-resize-handle"
+              onMouseDown={handleResizeStart}
+              onDoubleClick={handleResizeDoubleClick}
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: '-4px',
+                bottom: 0,
+                width: '8px',
+                cursor: 'col-resize',
+                backgroundColor: isResizing ? 'rgba(33, 150, 243, 0.6)' : 'transparent',
+                zIndex: 20,
+                transition: 'background-color 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!isResizing) {
+                  e.target.style.backgroundColor = 'rgba(33, 150, 243, 0.4)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isResizing) {
+                  e.target.style.backgroundColor = 'transparent';
+                }
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '3px',
+                  height: '30px',
+                  backgroundColor: 'rgba(33, 150, 243, 0.7)',
+                  borderRadius: '1.5px',
+                  opacity: 0,
+                  transition: 'opacity 0.2s ease',
+                }}
+                className="resize-indicator"
               />
             </div>
           </motion.div>
@@ -354,14 +453,13 @@ function Presentation() {
                 transition={{ delay: 0.4, duration: 0.6 }}
               >
                 <motion.div
-                    className="event-header"
+                    className="event-header presentation-header"
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                 >
-                  <div className="event-title-container">
+                  <div className="event-content-center">
                     <h2 className="event-title">{currentEvent.title}</h2>
-
                     <div className="event-date">
                       {currentEvent.date
                           ? (
@@ -373,7 +471,7 @@ function Presentation() {
                                 })}
                                 {currentEvent.endDate && (
                                     <>
-                                      {<br/>}' ~ '
+                                      {<br/>}{' ~ '}
                                       {new Date(currentEvent.endDate).toLocaleDateString('ko-KR', {
                                         year: 'numeric',
                                         month: 'long',
@@ -387,9 +485,14 @@ function Presentation() {
                       }
                     </div>
                   </div>
+                  <div className="event-progress-info">
+                    <span className="event-counter">
+                      {currentEventIndex + 1} / {events.length}
+                    </span>
+                  </div>
                 </motion.div>
                 <div className="event-description">
-                  <SmartPaginatedText 
+                  <DynamicPaginatedText
                     text={currentEvent.description}
                     className="presentation-text"
                   />
@@ -397,20 +500,22 @@ function Presentation() {
 
                 {/* 이벤트 상세 정보 */}
                 <motion.div 
-                  className="event-meta"
+                  className="event-meta presentation-meta"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
                 >
-                  <div className="meta-item">
-                    <span className={`emotion-value ${currentEvent.emotionScore >= 0 ? 'positive' : 'negative'}`}>
-                      {currentEvent.emotionScore > 0 ? '+' : ''}{currentEvent.emotionScore}
-                    </span>
+                  <div className="meta-center-group">
+                    <div className="meta-item">
+                      <span className={`emotion-value ${currentEvent.emotionScore >= 0 ? 'positive' : 'negative'}`}>
+                        {currentEvent.emotionScore > 0 ? '+' : ''}{currentEvent.emotionScore}
+                      </span>
+                    </div>
+                    <div className="meta-item">
+                      <span className="stars">{'★'.repeat(currentEvent.importanceRate)}</span>
+                    </div>
                   </div>
-                  <div className="meta-item">
-                    <span className="stars">{'★'.repeat(currentEvent.importanceRate)}</span>
-                  </div>
-                  <div className="meta-item">
+                  <div className="meta-item category-item">
                     <span className="category">{currentEvent.category}</span>
                   </div>
                 </motion.div>

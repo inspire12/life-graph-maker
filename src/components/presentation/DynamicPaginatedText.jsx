@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
-function SmartPaginatedText({ text, className = '' }) {
+function DynamicPaginatedText({ text, className = '' }) {
   const [currentPage, setCurrentPage] = useState(0);
   const [pages, setPages] = useState([]);
   const [containerHeight, setContainerHeight] = useState('auto');
@@ -215,7 +215,7 @@ function SmartPaginatedText({ text, className = '' }) {
             disabled={currentPage === 0}
             title="이전 페이지 (←)"
           >
-            <FiChevronLeft />
+            ←
           </button>
 
           <div className="page-indicators">
@@ -235,7 +235,7 @@ function SmartPaginatedText({ text, className = '' }) {
             disabled={currentPage === pages.length - 1}
             title="다음 페이지 (→)"
           >
-            <FiChevronRight />
+            →
           </button>
         </div>
       )}
@@ -272,7 +272,7 @@ function SmartPaginatedText({ text, className = '' }) {
         }
         
         .smart-paginated-text-container.has-pagination .text-content {
-          height: calc(100% - 60px);
+          height: calc(100% - 80px);
         }
 
         .text-page {
@@ -436,4 +436,4 @@ function SmartPaginatedText({ text, className = '' }) {
   );
 }
 
-export default SmartPaginatedText;
+export default DynamicPaginatedText;

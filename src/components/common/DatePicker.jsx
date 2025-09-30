@@ -226,6 +226,7 @@ function DatePicker({
 
         // 날짜 유효성 검증
         if (month >= 0 && month <= 11 && day >= 1 && day <= 31 && year >= 1900 && year <= 2100) {
+          day = day + 1
           const date = new Date(year, month, day);
           if (date.getFullYear() === year && 
               date.getMonth() === month && 

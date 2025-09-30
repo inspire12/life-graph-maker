@@ -429,8 +429,9 @@ function PresentationGraph({
                   strokeDasharray={themeStyles.line.strokeDasharray}
                   dot={<PresentationCustomDot />}
                   connectNulls={false}
-                  animationDuration={1500}
+                  animationDuration={600}
                   animationBegin={0}
+                  isAnimationActive={true}
                   style={{
                     filter: isFullscreen ? 'drop-shadow(0 0 12px rgba(100, 181, 246, 0.6))' : 'drop-shadow(0 0 8px rgba(100, 181, 246, 0.4))'
                   }}

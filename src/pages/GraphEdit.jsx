@@ -277,17 +277,17 @@ function GraphEdit() {
           </div>
         </div>
 
-        <div className="graph-container">
-          <LifeGraph
-            events={filteredEvents}
-            viewMode={viewMode}
-            onEventClick={handleEditEvent}
-            onGraphClick={handleGraphClick}
-            height={500}
-          />
-        </div>
+        <div className="content-layout">
+          <div className="graph-container">
+            <LifeGraph
+              events={filteredEvents}
+              viewMode={viewMode}
+              onEventClick={handleEditEvent}
+              onGraphClick={handleGraphClick}
+              height={500}
+            />
+          </div>
 
-        <div className="events-panel">
           <div className="events-panel-header">
             <div className="panel-title-section">
               <h3>이벤트 목록 ({filteredEvents.length}개{selectedCategories.length > 0 ? ` / 전체 ${graph.events?.length || 0}개` : ''})</h3>

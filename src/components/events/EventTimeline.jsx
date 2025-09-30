@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FiCalendar, FiClock, FiEdit3, FiStar } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { getEmotionColor } from '../../utils/colorHelpers';
+import DynamicPaginatedText from "../presentation/DynamicPaginatedText.jsx";
 
 function EventTimeline({ events = [], onEventClick }) {
   const [selectedYear, setSelectedYear] = useState(null);
@@ -113,7 +114,6 @@ function EventTimeline({ events = [], onEventClick }) {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
-                    onClick={() => onEventClick && onEventClick(event)}
                   >
                     <div className="timeline-dot" style={{ backgroundColor: getEmotionColor(event.emotionScore) }} />
                     
@@ -129,7 +129,14 @@ function EventTimeline({ events = [], onEventClick }) {
                               {'★'.repeat(event.importanceRate || 3)}
                             </div>
                             {onEventClick && (
-                              <button className="edit-btn" title="수정">
+                              <button 
+                                className="edit-btn" 
+                                title="수정"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEventClick(event);
+                                }}
+                              >
                                 <FiEdit3 size={16} />
                               </button>
                             )}
@@ -151,7 +158,10 @@ function EventTimeline({ events = [], onEventClick }) {
                         )}
 
                         {event.description && (
-                          <p className="event-description">{event.description}</p>
+                            <DynamicPaginatedText
+                                text= {event.description}
+                                className="event-description"
+                            />
                         )}
 
                         <div className="event-stats">
