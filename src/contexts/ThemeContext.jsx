@@ -3,6 +3,61 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext();
 
 export const GLOBAL_THEMES = {
+
+  book: {
+    id: 'book',
+    name: 'Book',
+    displayName: '북',
+    description: '따뜻하고 아늑한 책 느낌의 테마',
+    colors: {
+      primary: '#d97706',
+      secondary: '#dc2626',
+      background: 'linear-gradient(135deg, #fef7ed 0%, #fef3c7 100%)',
+      surface: 'rgba(254, 252, 232, 0.9)',
+      card: 'rgba(255, 251, 235, 0.95)',
+      border: 'rgba(217, 119, 6, 0.2)',
+      text: {
+        primary: '#451a03',
+        secondary: '#92400e',
+        disabled: '#d97706'
+      },
+      button: {
+        primary: 'linear-gradient(135deg, #d97706 0%, #ea580c 100%)',
+        primaryHover: 'linear-gradient(135deg, #b45309 0%, #c2410c 100%)',
+        secondary: 'rgba(254, 252, 232, 0.8)',
+        secondaryHover: 'rgba(252, 211, 77, 0.3)'
+      },
+      shadow: '0 10px 25px rgba(217, 119, 6, 0.2)',
+      shadowHover: '0 20px 40px rgba(217, 119, 6, 0.3)'
+    }
+  },
+  handwritten: {
+    id: 'handwritten',
+    name: 'Handwritten',
+    displayName: '손글씨',
+    description: '손으로 그린 스케치 느낌의 테마',
+    colors: {
+      primary: '#4a5568',
+      secondary: '#48bb78',
+      background: 'linear-gradient(135deg, #fdfdfd 0%, #f7fafc 100%)',
+      surface: 'rgba(247, 250, 252, 0.8)',
+      card: 'rgba(255, 255, 255, 0.9)',
+      border: 'rgba(74, 85, 104, 0.2)',
+      text: {
+        primary: '#2d3748',
+        secondary: '#4a5568',
+        disabled: '#a0aec0'
+      },
+      button: {
+        primary: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)',
+        primaryHover: 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)',
+        secondary: 'rgba(247, 250, 252, 0.8)',
+        secondaryHover: 'rgba(237, 242, 247, 0.9)'
+      },
+      shadow: '0 8px 20px rgba(74, 85, 104, 0.15)',
+      shadowHover: '0 15px 35px rgba(74, 85, 104, 0.25)'
+    }
+  },
   light: {
     id: 'light',
     name: 'Light',
@@ -57,66 +112,13 @@ export const GLOBAL_THEMES = {
       shadowHover: '0 20px 40px rgba(0, 0, 0, 0.6)'
     }
   },
-  book: {
-    id: 'book',
-    name: 'Book',
-    displayName: '북',
-    description: '따뜻하고 아늑한 책 느낌의 테마',
-    colors: {
-      primary: '#d97706',
-      secondary: '#dc2626',
-      background: 'linear-gradient(135deg, #fef7ed 0%, #fef3c7 100%)',
-      surface: 'rgba(254, 252, 232, 0.9)',
-      card: 'rgba(255, 251, 235, 0.95)',
-      border: 'rgba(217, 119, 6, 0.2)',
-      text: {
-        primary: '#451a03',
-        secondary: '#92400e',
-        disabled: '#d97706'
-      },
-      button: {
-        primary: 'linear-gradient(135deg, #d97706 0%, #ea580c 100%)',
-        primaryHover: 'linear-gradient(135deg, #b45309 0%, #c2410c 100%)',
-        secondary: 'rgba(254, 252, 232, 0.8)',
-        secondaryHover: 'rgba(252, 211, 77, 0.3)'
-      },
-      shadow: '0 10px 25px rgba(217, 119, 6, 0.2)',
-      shadowHover: '0 20px 40px rgba(217, 119, 6, 0.3)'
-    }
-  },
-  handwritten: {
-    id: 'handwritten',
-    name: 'Handwritten',
-    displayName: '손글씨',
-    description: '손으로 그린 스케치 느낌의 테마',
-    colors: {
-      primary: '#4a5568',
-      secondary: '#48bb78',
-      background: 'linear-gradient(135deg, #fdfdfd 0%, #f7fafc 100%)',
-      surface: 'rgba(247, 250, 252, 0.8)',
-      card: 'rgba(255, 255, 255, 0.9)',
-      border: 'rgba(74, 85, 104, 0.2)',
-      text: {
-        primary: '#2d3748',
-        secondary: '#4a5568',
-        disabled: '#a0aec0'
-      },
-      button: {
-        primary: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)',
-        primaryHover: 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)',
-        secondary: 'rgba(247, 250, 252, 0.8)',
-        secondaryHover: 'rgba(237, 242, 247, 0.9)'
-      },
-      shadow: '0 8px 20px rgba(74, 85, 104, 0.15)',
-      shadowHover: '0 15px 35px rgba(74, 85, 104, 0.25)'
-    }
-  }
+
 };
 
 export function ThemeProvider({ children }) {
   const [currentTheme, setCurrentTheme] = useState(() => {
     const saved = localStorage.getItem('app-theme');
-    return saved || 'light';
+    return saved || 'book';
   });
 
   const [controlsVisible, setControlsVisible] = useState(true);

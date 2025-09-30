@@ -21,7 +21,7 @@ export class LocalStorageService extends StorageService {
         graphs: [],
         settings: {
           defaultViewMode: 'timeline',
-          theme: 'light',
+          theme: 'book',
           autoSaveInterval: 30000
         }
       };
@@ -83,8 +83,16 @@ export class LocalStorageService extends StorageService {
         description: graphData.description || '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        events: []
+        events: graphData.events || []
       };
+
+      // 이벤트가 있는 경우 각 이벤트에 새로운 ID 할당
+      if (newGraph.events.length > 0) {
+        newGraph.events = newGraph.events.map(event => ({
+          ...event,
+          id: uuidv4()
+        }));
+      }
 
       data.graphs.push(newGraph);
       this.saveData(data);

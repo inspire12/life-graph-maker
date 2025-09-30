@@ -256,7 +256,7 @@ function DynamicPaginatedText({ text, className = '' }) {
           position: relative;
           transition: all 0.3s ease;
           outline: none;
-          border-radius: 20px;
+          border-radius: 0 0 15px 15px;
           box-sizing: border-box;
         }
 
@@ -278,7 +278,7 @@ function DynamicPaginatedText({ text, className = '' }) {
         .text-page {
           width: 100%;
           height: 100%;
-          padding: 40px;
+          padding: 0.5rem 1rem 1rem 1rem;
           overflow: hidden;
           display: flex;
           flex-direction: column;

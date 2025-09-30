@@ -37,8 +37,9 @@ function GraphList() {
 
   const handleDuplicateGraph = async (id) => {
     try {
-      await graphService.duplicateGraph(id);
+      const duplicatedGraph = await graphService.duplicateGraph(id);
       await loadGraphs(); // 목록 새로고침
+      alert(`그래프가 성공적으로 복사되었습니다! (${duplicatedGraph.events?.length || 0}개 이벤트 포함)`);
     } catch (error) {
       console.error('Failed to duplicate graph:', error);
       alert('그래프 복사에 실패했습니다.');

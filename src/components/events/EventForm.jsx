@@ -234,9 +234,9 @@ function EventForm({
   return (
     <form onSubmit={handleSubmit} className="event-form">
       <div className="form-group">
-        <label htmlFor="title">이벤트 제목 *</label>
+        <label htmlFor="title">이벤트 제목 <span className="required">*</span></label>
         <input
-          type="text"
+            type="text"
           id="title"
           name="title"
           value={formData.title}

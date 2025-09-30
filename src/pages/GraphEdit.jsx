@@ -22,6 +22,9 @@ function GraphEdit() {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [prefilledData, setPrefilledData] = useState(null);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [tempTitle, setTempTitle] = useState('');
+  const [tempDescription, setTempDescription] = useState('');
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -112,6 +115,32 @@ function GraphEdit() {
       console.error('Failed to delete event:', error);
       alert('이벤트 삭제에 실패했습니다.');
     }
+  };
+
+  const handleEditTitle = () => {
+    setTempTitle(graph.title);
+    setTempDescription(graph.description || '');
+    setIsEditingTitle(true);
+  };
+
+  const handleSaveTitle = async () => {
+    try {
+      await graphService.updateGraph(id, {
+        title: tempTitle,
+        description: tempDescription
+      });
+      await loadGraph();
+      setIsEditingTitle(false);
+    } catch (error) {
+      console.error('Failed to update graph:', error);
+      alert('그래프 정보 수정에 실패했습니다.');
+    }
+  };
+
+  const handleCancelEditTitle = () => {
+    setIsEditingTitle(false);
+    setTempTitle('');
+    setTempDescription('');
   };
 
   const handleCloseModal = () => {
@@ -225,8 +254,39 @@ function GraphEdit() {
             <FiArrowLeft /> 목록
           </button>
           <div className="header-title">
-            <h1>{graph.title}</h1>
-            <p>{graph.description}</p>
+            {isEditingTitle ? (
+              <div className="title-edit-form">
+                <input
+                  type="text"
+                  value={tempTitle}
+                  onChange={(e) => setTempTitle(e.target.value)}
+                  className="title-input"
+                  placeholder="그래프 제목을 입력하세요"
+                  autoFocus
+                />
+                <textarea
+                  value={tempDescription}
+                  onChange={(e) => setTempDescription(e.target.value)}
+                  className="description-input"
+                  placeholder="그래프 설명을 입력하세요 (선택사항)"
+                  rows={2}
+                />
+                <div className="title-edit-actions">
+                  <button onClick={handleSaveTitle} className="btn btn-primary btn-sm">
+                    저장
+                  </button>
+                  <button onClick={handleCancelEditTitle} className="btn btn-secondary btn-sm">
+                    취소
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="title-display" onClick={handleEditTitle}>
+                <h1>{graph.title}</h1>
+                {graph.description && <p>{graph.description}</p>}
+                <div className="edit-hint">클릭하여 편집</div>
+              </div>
+            )}
           </div>
           <div className="header-actions">
             <div className="dropdown">

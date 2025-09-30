@@ -37,6 +37,7 @@ function Presentation() {
   const [layoutMode, setLayoutMode] = useState('vertical'); // 'horizontal' | 'vertical'
   const [sidebarOpen, setSidebarOpen] = useState(false); // 그래프 사이드바 토글
   const [sidebarMode, setSidebarMode] = useState('overlay'); // 'overlay' | 'push'
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   
   // 사이드바 리사이즈 관련 상태
   const [sidebarWidth, setSidebarWidth] = useState(() => {
@@ -327,7 +328,25 @@ function Presentation() {
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <div className="sidebar-header">
-              <h3>인생 그래프</h3>
+              <div className="sidebar-title-section">
+                <h3>{graph.title}</h3>
+                {graph.description && (
+                  <>
+                    <button 
+                      className="description-toggle"
+                      onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                      title={descriptionExpanded ? '설명 숨기기' : '설명 보기'}
+                    >
+                      {descriptionExpanded ? '▼' : '▶'} 설명
+                    </button>
+                    {descriptionExpanded && (
+                      <div className="graph-description-content">
+                        {graph.description}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
               <button onClick={toggleSidebar} className="sidebar-close">
                 ✕
               </button>
